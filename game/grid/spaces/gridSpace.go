@@ -5,6 +5,10 @@ import (
 	"errors"
 )
 
+type HexCoordinates struct {
+	q, r, s int
+}
+
 type HexDirection int
 const (
 	Undefined HexDirection = iota
@@ -24,6 +28,11 @@ var directionMap = map[HexDirection]*Hex {
 	SouthWest: { coordinates: [3]int {-1, 1, 0} },
 	NorthWest: { coordinates: [3]int {-1, 0, 1} },
 	North: { coordinates: [3]int {0, -1, 1} },
+}
+
+type Hex struct {
+	//Private/un-exported
+	coordinates	[3]int //TODO: Replace [3]int with HexCoordinates?
 }
 
 func NewHex(c ...int) (*Hex, error) {
@@ -57,11 +66,6 @@ type GridSpace interface {
 	Multiply(a *GridSpace, b int) *GridSpace
 	Distance(a, b *GridSpace) int
 	Neighbor(a *GridSpace, d HexDirection) *GridSpace
-}
-
-// ----- Structs -----
-type Hex struct {
-	coordinates	[3]int
 }
 
 // ----- Interface Implementations -----
