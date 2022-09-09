@@ -2,8 +2,6 @@ package spaces
 
 import (
 )
-
-// ----- Interfaces -----
 type GridSpace interface {
 	Equals(a, b *GridSpace) bool
 	Add(a, b *GridSpace) *GridSpace

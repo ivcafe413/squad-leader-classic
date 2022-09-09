@@ -57,17 +57,6 @@ func NewHex(c ...int) (*Hex, error) {
 
 // ----- Hex implementation of GridSpace interface -----
 func (a *Hex) Equals(b *Hex) bool {
-	// Short-circuit on falses to test equality
-	// if len(a.coordinates) != len(b.coordinates) {
-	// 	return false
-	// }
-
-	// for i := range a.coordinates {
-	// 	if a.coordinates[i] != b.coordinates[i] {
-	// 		return false
-	// 	}
-	// }
-
 	return a.Coordinates == b.Coordinates
 }
 
@@ -76,9 +65,6 @@ func (a *Hex) Add(b *Hex) *Hex {
 	var sCoords HexCoordinates 
 	s := new(Hex)
 	
-	// for i := range a.coordinates {
-	// 	s.coordinates[i] = a.coordinates[i] + b.coordinates[i]
-	// }
 	sCoords.q = a.Coordinates.q + b.Coordinates.q
 	sCoords.r = a.Coordinates.r + b.Coordinates.r
 	sCoords.s = a.Coordinates.s + b.Coordinates.s
@@ -116,9 +102,7 @@ func (a *Hex) Distance(b *Hex) int {
 
 	//The following only works on CUBIC coordinates, which this is under the hood
 	d := 0.0
-	// for _,n := range(c.coordinates) {
-	// 	d += math.Abs(float64(n))
-	// }
+
 	d += math.Abs(float64(c.Coordinates.q))
 	d += math.Abs(float64(c.Coordinates.r))
 	d += math.Abs(float64(c.Coordinates.s))

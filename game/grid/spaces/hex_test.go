@@ -5,13 +5,6 @@ import (
 )
 
 func Test_HexEquals(t *testing.T) {
-	// hexA := &Hex {
-	// 	coordinates: []int {1, 1},
-	// }
-	// hexB := &Hex {
-	// 	coordinates: []int {1, 1},
-	// }
-	//coords := []int {1, 1}
 	hexA, _ := NewHex(1, 1)
 	hexB, _ := NewHex(1, 1)
 
@@ -19,39 +12,20 @@ func Test_HexEquals(t *testing.T) {
 		t.Fatalf(`Hex .Equals Test failing`)
 	}
 
-	// -----REMOVED, BAD TEST: == doesn't ever work with different pointers
-	// if!(hexA == hexB) {
-	// 	t.Fatalf(`Hex == (equality) Test failing: %v should equal %v`, hexA, hexB)
-	// }
-
 	//coords = []int {2, 2} //NOT equal
 	hexB, _ = NewHex(2, 2)
 
 	if hexA.Equals(hexB) {
 		t.Fatalf(`Hex Equality Test failing - (1, 1) should NOT equal (2, 2)`)
 	}
-
-	// if hexA == hexB {
-	// 	t.Fatalf(`Hex == (equality operator) Test failing `)
-	// }
 }
 
 func Test_HexAdd(t *testing.T) {
-	// hexA := &Hex {
-	// 	coordinates: []int {2,0},
-	// }
-	// hexB := &Hex {
-	// 	coordinates: []int {0,-1},
-	// }
-	//coordsA := []int {2, 0}
-	//coordsB := []int {0, -1}
 	hexA, _ := NewHex(2, 0)
 	hexB, _ := NewHex(0, -1)
 
 	hexC := hexA.Add(hexB)
-	// hexD := &Hex {
-	// 	coordinates: []int {2, -1},
-	// }
+
 	hexD, _ := NewHex(2, -1)
 	if !hexC.Equals(hexD) {
 		t.Fatalf(`Hex Addition Failing - (2, 0) + (0, -1) SHOULD = (2, -1)`)
