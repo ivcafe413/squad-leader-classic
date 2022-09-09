@@ -24,21 +24,25 @@ type GameGrid struct {
 }
 
 type GridLayer struct {
-	label	string
+	Label	string
 	// spaces		[]spaces.GridSpace
 	//hexMap	map[spaces.HexCoordinates]*spaces.Hex
-	testMap map[spaces.Hex]string
+	Map map[spaces.Hex]any
 }
+
+// type GridPopulation[V any] interface {
+// 	populate (a spaces.GridSpace) V
+// }
 
 func New() *GameGrid {
 	grid := new(GameGrid)
 	grid.layers = []GridLayer {
 		{
-			label: "default",
+			Label: "default",
 			// spaces: []spaces.GridSpace { },
 			//hexMap: make(map[spaces.HexCoordinates]*spaces.Hex),
 			//testMap: make(map[spaces.Hex]string),
-			testMap: GenerateRectangularMap(32, 9),
+			Map: GenerateRectangularMap(32, 9),
 		},
 	}
 
@@ -46,10 +50,10 @@ func New() *GameGrid {
 }
 
 //Map generation (strategies?)
-func GenerateRectangularMap(right, bottom int) map[spaces.Hex]string{
+func GenerateRectangularMap[V any] (right, bottom int) map[spaces.Hex]V {
 	//right and bottom dictate furthest coordinate, not width/height
 
-	newMap := make(map[spaces.Hex]string)
+	newMap := make(map[spaces.Hex]V)
 	var newHex *spaces.Hex
 
 	//Normal map-right is 32 (33 spaces wide)
@@ -58,7 +62,7 @@ func GenerateRectangularMap(right, bottom int) map[spaces.Hex]string{
 		//Normal map-bottom is 9 (10 spaces wide)
 		for j := -q_offset; j <= bottom - q_offset; j++ {
 			newHex, _ = spaces.NewHex(i, j)
-			newMap[*newHex] = "Test Generate"
+			newMap[*newHex] = make(V)
 		}
 	}
 
@@ -76,3 +80,5 @@ func PopulateRectangularMap(gameMap map[spaces.Hex]string, right, bottom int) {
 		}
 	}
 }
+
+// func 
