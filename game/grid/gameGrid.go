@@ -2,16 +2,8 @@ package grid
 
 import (
 	"github.com/vagrant-technology/squad-leader/game/grid/spaces"
+	"github.com/vagrant-technology/squad-leader/game/grid/spaces/coordinates"
 )
-
-//Define constants/enums
-// type CoordinateSystem int
-// const (
-// 	Undefined CoordinateSystem = iota
-// 	Axial
-// 	Cubic
-// 	Offset
-// )
 
 // type gameGrid interface {
 // 	NewSpace(system CoordinateSystem, layer int, coordinates ...int)
@@ -19,32 +11,31 @@ import (
 
 // ----- Structs -----
 
-type GameGrid struct {
-	layers	[]GridLayer
+type HexGrid struct {
+	//layers	[]GridLayer
+	Map map[coordinates.GridCoordinates[coordinates.HexCoordinates]]spaces.Hex
 }
 
 type GridLayer struct {
 	Label	string
 	// spaces		[]spaces.GridSpace
 	//hexMap	map[spaces.HexCoordinates]*spaces.Hex
-	Map map[spaces.Hex]any
+	
 }
 
 // type GridPopulation[V any] interface {
 // 	populate (a spaces.GridSpace) V
 // }
 
-func New() *GameGrid {
-	grid := new(GameGrid)
-	grid.layers = []GridLayer {
-		{
-			Label: "default",
-			// spaces: []spaces.GridSpace { },
-			//hexMap: make(map[spaces.HexCoordinates]*spaces.Hex),
-			//testMap: make(map[spaces.Hex]string),
-			Map: GenerateRectangularMap(32, 9),
-		},
-	}
+func NewHexGrid() *HexGrid {
+	grid := new(HexGrid)
+	// grid.layers = []GridLayer {
+	// 	{
+	// 		Label: "default",
+	// 		Map: GenerateRectangularMap[string](32, 9),
+	// 	},
+	// }
+	
 
 	return grid
 }
