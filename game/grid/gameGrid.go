@@ -9,7 +9,7 @@ type GameGrid[T coordinates.GridCoordinates[T]] interface {
 // 	NewSpace(system CoordinateSystem, layer int, coordinates ...int)
 	Get(gc T) (*spaces.GridSpace, bool)
 	Set(gc T, gs *spaces.GridSpace)
-	GenerateRectangularMap(right, bottom int)
+	SetMapGenerationStrat(MapGenerationStrategy[T])
 }
 
 // ----- Structs -----
@@ -18,55 +18,47 @@ type hexMap map[coordinates.HexCoordinates]*spaces.GridSpace
 type HexGrid struct {
 	//layers	[]GridLayer
 	hexMap
+	generationStrat MapGenerationStrategy[coordinates.HexCoordinates]
 }
 
 // Getter/Setter for embedded Map
-func (hexGrid HexGrid) Get(hc coordinates.HexCoordinates) (*spaces.GridSpace, bool) {
+func (hexGrid *HexGrid) Get(hc coordinates.HexCoordinates) (*spaces.GridSpace, bool) {
 	result, exists := hexGrid.hexMap[hc]
 	return result, exists
 }
 
-func (hexGrid HexGrid) Set(hc coordinates.HexCoordinates, gs *spaces.GridSpace) {
+func (hexGrid *HexGrid) Set(hc coordinates.HexCoordinates, gs *spaces.GridSpace) {
 	hexGrid.hexMap[hc] = gs
 }
 
-type GridLayer struct {
-	Label	string	
+func (hexGrid *HexGrid) SetMapGenerationStrat(strat MapGenerationStrategy[coordinates.HexCoordinates]) {
+	hexGrid.generationStrat = strat
 }
 
-// type GridPopulation[V any] interface {
-// 	populate (a spaces.GridSpace) V
+// type GridLayer struct {
+// 	Label	string	
 // }
 
-func NewHexGrid() *HexGrid {
+func NewHexGrid(c, r int) *HexGrid {
 	grid := new(HexGrid)
+
 	grid.hexMap = make(map[coordinates.HexCoordinates]*spaces.GridSpace)
+	grid.generationStrat = &RectangularHexMapStrat {
+		RectangularMapStrat[coordinates.HexCoordinates] {
+			columns: c,
+			rows: r,
+		},
+	}
+	
+	//Run Map Generation/Population Strategy
+	grid.MakeMap()
+	
 	return grid
 }
 
 //Map generation (strategies?)
-func (hexGrid *HexGrid) GenerateRectangularMap (right, bottom int) {
-	//right and bottom dictate furthest coordinate, not width/height
-
-	// newMap := make(map[*spaces.GridSpace]V)
-	// var newHex *spaces.GridSpace
-
-	//Normal map-right is 32 (33 spaces wide)
-	for i := 0; i <= right; i++ {
-		q_offset := i >> 1
-		//Normal map-bottom is 9 (10 spaces wide)
-		for j := -q_offset; j <= bottom - q_offset; j++ {
-			//newHex, _ = spaces.NewHex(i, j)
-			newHex, _ := coordinates.NewHex(i, j)
-			newSpace := spaces.New()
-			// newMap[*newHex] = make(V)
-			//hexGrid.Map[newHex] = newSpace
-			//hexGrid.HexMap[newHex] = newSpace
-			hexGrid.Set(*newHex, newSpace)
-		}
-	}
-
-	//return newMap
+func (hexGrid *HexGrid) MakeMap () {
+	hexGrid.generationStrat.GenerateMap(hexGrid)
 }
 
 // func PopulateRectangularMap(gameMap map[spaces.Hex]string, right, bottom int) {

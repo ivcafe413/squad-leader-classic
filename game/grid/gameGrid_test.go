@@ -2,6 +2,7 @@ package grid
 
 import (
 	"testing"
+	"fmt"
 	//"github.com/vagrant-technology/squad-leader/game/grid/spaces"
 	"github.com/vagrant-technology/squad-leader/game/grid/coordinates"
 )
@@ -9,12 +10,17 @@ import (
 func Test_GeneratedRectangleMap(t *testing.T) {
 	var testGrid GameGrid[coordinates.HexCoordinates] //Testing interface
 
-	testGrid = NewHexGrid()
-	testGrid.GenerateRectangularMap(3, 3) //Should be 4x4 size
+	testGrid = NewHexGrid(33, 10)
+	//fmt.Println(testGrid.hexMap)
+	// for key, value := range *testGrid { // Order not specified 
+	// 	fmt.Println(key, value)
+	// }
 
 	//Top Left Corner - (0, 0, 0)
 	topLeftHex, _ := coordinates.NewHex(0, 0)
-	if _, exists := testGrid.Get(*topLeftHex); !exists {
+	topLeftGrid, exists := testGrid.Get(*topLeftHex)
+	fmt.Printf("(0, 0): %v\n", topLeftGrid)
+	if !exists {
 		t.Fatalf(`Rectangle Map Generation failure - origin hex not existing`)
 	}
 	//Top Right Corner - (3, -1, -2)
