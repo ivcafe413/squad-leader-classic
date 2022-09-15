@@ -11,7 +11,7 @@ type RectangularMapStrat[T coordinates.GridCoordinates[T]] struct {
 }
 
 type RectangularHexMapStrat struct {
-	RectangularMapStrat[coordinates.HexCoordinates]
+	RectangularMapStrat[coordinates.HexCoordinates] //This is actually very nice
 }
 
 func (s *RectangularHexMapStrat) GenerateMap(gg GameGrid[coordinates.HexCoordinates]) {
