@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/gofiber/fiber/v2"
+	"github.com/vagrant-technology/squad-leader/handlers"
 )
 
 func Router(app *fiber.App) {
@@ -10,18 +11,7 @@ func Router(app *fiber.App) {
 		//TODO: Return Homepage/app (UI/static)
 		return c.SendString("Hello World")
 		//TODO: In Test, use root for stats/debug
-		
 	})
 
-	app.Post("/CreateRoom", func(c *fiber.Ctx) error {
-		//Populate instance of user
-		user := new(User);
-		if err := c.BodyParser(user); err != nil {
-			return err
-		}
-		
-
-		roomID := game.NewRoom()
-		return c.SendString(roomID)
-	})
+	app.Post("/CreateRoom", handlers.CreateRoom)
 }
