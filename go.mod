@@ -3,11 +3,14 @@ module github.com/vagrant-technology/squad-leader
 go 1.19
 
 require (
+	github.com/gofiber/fiber/v2 v2.36.0
+	github.com/gofiber/websocket/v2 v2.0.24
+	github.com/google/uuid v1.3.0
+)
+
+require (
 	github.com/andybalholm/brotli v1.0.4 // indirect
 	github.com/fasthttp/websocket v1.5.0 // indirect
-	github.com/gofiber/fiber/v2 v2.36.0 // indirect
-	github.com/gofiber/websocket/v2 v2.0.24 // indirect
-	github.com/google/uuid v1.3.0 // indirect
 	github.com/klauspost/compress v1.15.0 // indirect
 	github.com/savsgio/gotils v0.0.0-20211223103454-d0aaa54c5899 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect

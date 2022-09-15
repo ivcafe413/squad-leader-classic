@@ -8,6 +8,10 @@ import (
 	// "github.com/vagrant-technology/squad-leader/store"
 )
 
+type client struct {
+	
+}
+
 func main() {
 	serverConfig := fiber.Config {
 		ServerHeader: "Squad Leader Application Server",
@@ -16,7 +20,7 @@ func main() {
 
 	Router(app)
 
-	// ----- WebSocket section -----
+	// ----- WebSockets -----
 	app.Use("/ws", func(c *fiber.Ctx) error {
 		if websocket.IsWebSocketUpgrade(c) {
 			c.Locals("allowed", true)

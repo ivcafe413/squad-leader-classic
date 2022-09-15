@@ -24,9 +24,10 @@ func CreateRoom(c *fiber.Ctx) error {
 	user := store.NewUser(u.Username)
 	roomID := game.NewRoom(*user)
 
-	// return c.JSON(&fiber.Map{
-	// 	"success": true,
-	// 	"room":    roomID,
-	// })
-	return c.SendString(roomID)
+	return c.JSON(&fiber.Map{
+		"success": true,
+		"room":    roomID,
+		"user": user,
+	})
+	//return c.SendString(roomID)
 }

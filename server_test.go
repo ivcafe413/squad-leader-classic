@@ -7,7 +7,9 @@ import (
 	"io"
 	"net/http/httptest"
 	"testing"
+
 	"github.com/gofiber/fiber/v2"
+	"github.com/vagrant-technology/squad-leader/store"
 	// "github.com/vagrant-technology/squad-leader/game"
 )
 
@@ -44,7 +46,7 @@ func Test_CreateRoomRoute(t *testing.T) {
 	// fmt.Println(jsonUser)
 
 	postReq := httptest.NewRequest("POST", "/CreateRoom", bytes.NewReader(jsonUser))
-	postReq.Header.Set("Content-Type", "application/json")
+	postReq.Header.Set("Content-Type", "application/json") //Necessary
 
 	postResp, postErr := app.Test(postReq)
 	fmt.Println("Post Response: " + fmt.Sprint(postResp.StatusCode))
@@ -61,12 +63,17 @@ func Test_CreateRoomRoute(t *testing.T) {
 
 	defer postResp.Body.Close()
 
-	respString, err = io.ReadAll(postResp.Body)
+	//respString, err = io.ReadAll(postResp.Body)
 	//respRoom := new(game.Room)
-	//json.NewDecoder(postResp.Body).Decode(respRoom)
-	if err != nil {
-		t.Fatal(err)
+	respJson := struct {
+		Room string `json:"room"`
+		User store.User `json:"user"`
+	}{}
+	jsonErr := json.NewDecoder(postResp.Body).Decode(&respJson)
+	if jsonErr != nil {
+		t.Fatal(jsonErr)
 	}
 
-	fmt.Println("Room ID: " + string(respString))
+	fmt.Println("Room ID: " + respJson.Room)
+	fmt.Println("Username: " + respJson.User.Username)
 }
