@@ -4,11 +4,9 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/websocket/v2"
 	// "github.com/google/uuid"
-	"github.com/vagrant-technology/squad-leader/game"
-	//"github.com/vagrant-technology/squad-leader/store"
+	// "github.com/vagrant-technology/squad-leader/game"
+	// "github.com/vagrant-technology/squad-leader/store"
 )
-
-var rooms = make(map[string]game.Room)
 
 func main() {
 	serverConfig := fiber.Config {

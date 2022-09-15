@@ -7,9 +7,8 @@ import (
 	"io"
 	"net/http/httptest"
 	"testing"
-
 	"github.com/gofiber/fiber/v2"
-	"github.com/vagrant-technology/squad-leader/game"
+	// "github.com/vagrant-technology/squad-leader/game"
 )
 
 func Test_CreateRoomRoute(t *testing.T) {
@@ -18,16 +17,16 @@ func Test_CreateRoomRoute(t *testing.T) {
 	Router(app)
 
 	// ----- Test 1 - Basic Routing 200
-	req := httptest.NewRequest("GET", "/", nil)
-	resp, _ := app.Test(req, 1)
+	getReq := httptest.NewRequest("GET", "/", nil)
+	getResp, _ := app.Test(getReq, 1)
 
-	if resp.StatusCode != 200 {
+	if getResp.StatusCode != 200 {
 		t.Fatal("Basic Root GET request failing - probably app/router not initializing properly")
 	}
 
-	defer resp.Body.Close()
+	defer getResp.Body.Close()
 
-	respString, err := io.ReadAll(resp.Body)
+	respString, err := io.ReadAll(getResp.Body)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -40,23 +39,34 @@ func Test_CreateRoomRoute(t *testing.T) {
 	}{
 		Username: "TestUser",
 	}
+	//fmt.Println(testUser)
 	jsonUser, _ := json.Marshal(testUser)
-	req = httptest.NewRequest("POST", "/CreateRoom", bytes.NewBuffer(jsonUser))
-	resp, err = app.Test(req, 1)
+	// fmt.Println(jsonUser)
 
-	if resp.StatusCode != 200 {
-		fmt.Println(err)
-		t.Fatal(err)
+	postReq := httptest.NewRequest("POST", "/CreateRoom", bytes.NewReader(jsonUser))
+	postReq.Header.Set("Content-Type", "application/json")
+
+	postResp, postErr := app.Test(postReq)
+	fmt.Println("Post Response: " + fmt.Sprint(postResp.StatusCode))
+
+	if postErr != nil {
+		fmt.Println(postErr)
+		t.Fatal(postErr)
 	}
 
-	defer resp.Body.Close()
+	if postResp.StatusCode != fiber.StatusOK {
+		//fmt.Println(err.Error())
+		t.Fatal("Not a 200 Post")
+	}
 
-	//respString, err = io.ReadAll(resp.Body)
-	respRoom := new(game.Room)
-	json.NewDecoder(resp.Body).Decode(respRoom)
+	defer postResp.Body.Close()
+
+	respString, err = io.ReadAll(postResp.Body)
+	//respRoom := new(game.Room)
+	//json.NewDecoder(postResp.Body).Decode(respRoom)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	fmt.Println("Room ID: " + respRoom.ID.String())
+	fmt.Println("Room ID: " + string(respString))
 }
