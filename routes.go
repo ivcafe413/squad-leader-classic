@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/websocket/v2"
 	"github.com/vagrant-technology/squad-leader/handlers"
 )
 
@@ -14,4 +15,6 @@ func Router(app *fiber.App) {
 	})
 
 	app.Post("/CreateRoom", handlers.CreateRoom)
+
+	app.Get("/ws/:room/:user", websocket.New(handlers.JoinRoom))
 }
