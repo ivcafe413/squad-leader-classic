@@ -17,7 +17,7 @@ func ConfigureWS(app *fiber.App) {
 }
 
 func main() {
-	serverConfig := fiber.Config {
+	serverConfig := fiber.Config{
 		ServerHeader: "Squad Leader Application Server",
 	}
 	app := fiber.New(serverConfig)
