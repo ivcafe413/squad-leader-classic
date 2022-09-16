@@ -3,7 +3,6 @@ package handlers
 import (
 	"fmt"
 	"strconv"
-	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/websocket/v2"
@@ -19,7 +18,7 @@ func CreateRoom(c *fiber.Ctx) error {
 	u := struct {
 		Username string `json:"username"`
 	}{}
-	
+
 	// JSON Unmarahal MUST be on pointer struct, NOT non-pointer
 	if err := c.BodyParser(&u); err != nil {
 		fmt.Println("Create Room Error: " + err.Error())
@@ -33,12 +32,10 @@ func CreateRoom(c *fiber.Ctx) error {
 	return c.JSON(&fiber.Map{
 		"success": true,
 		"room":    roomID,
-		"user": user,
+		"user":    user,
 	})
 	//return c.SendString(roomID)
 }
-
-
 
 // ----- Join Room - Websocket connection to open room connection
 func JoinRoom(c *websocket.Conn) {
@@ -77,9 +74,6 @@ func JoinRoom(c *websocket.Conn) {
 	// 	//Infinite loop?
 	// }
 
-	// FOR TEST:
-	time.Sleep(2 * time.Second)
-
 	// Connection over
-	return //Should fire deferred unregister
+	// Should fire deferred unregister
 }
