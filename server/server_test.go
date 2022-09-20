@@ -16,7 +16,6 @@ import (
 
 	// "github.com/gofiber/websocket/v2"
 	"github.com/gorilla/websocket"
-	"github.com/vagrant-technology/squad-leader/game"
 	"github.com/vagrant-technology/squad-leader/store"
 	// "github.com/vagrant-technology/squad-leader/game"
 )
@@ -28,7 +27,7 @@ func Test_CreateRoomRoute(t *testing.T) {
 
 	app := fiber.New()
 
-	Router(app)
+	ConfigureApi(app)
 
 	// ----- Test 1 - Basic Routing 200
 	// getReq := httptest.NewRequest("GET", "/", nil)
@@ -57,7 +56,7 @@ func Test_CreateRoomRoute(t *testing.T) {
 	jsonUser, _ := json.Marshal(testUser)
 	// fmt.Println(jsonUser)
 
-	postReq := httptest.NewRequest("POST", "/CreateRoom", bytes.NewReader(jsonUser))
+	postReq := httptest.NewRequest("POST", "/api/CreateRoom", bytes.NewReader(jsonUser))
 	postReq.Header.Set("Content-Type", "application/json") //Necessary
 
 	postResp, postErr := app.Test(postReq)
@@ -104,11 +103,10 @@ func Test_CreateAndJoinRoom(t *testing.T) {
 	app := fiber.New(testConfig)
 
 	ConfigureWS(app)
-	go game.ClientHub()
-	Router(app)
+	ConfigureApi(app)
 
 	//ln := fasthttputil.NewInmemoryListener()
-	ln, _ := net.Listen("tcp", fmt.Sprintf("localhost:3000"))
+	ln, _ := net.Listen("tcp", "localhost:3001")
 	go func() {
 		_ = app.Listener(ln)
 	}()
@@ -124,7 +122,7 @@ func Test_CreateAndJoinRoom(t *testing.T) {
 	}{Username: "Alpha Dog"}
 	payload, _ := json.Marshal(u)
 
-	cReq := httptest.NewRequest("POST", "/CreateRoom", bytes.NewReader(payload))
+	cReq := httptest.NewRequest("POST", "/api/CreateRoom", bytes.NewReader(payload))
 	cReq.Header.Set("Content-Type", "application/json")
 
 	cRes, err := app.Test(cReq)

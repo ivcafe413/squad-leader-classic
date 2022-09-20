@@ -4,6 +4,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/websocket/v2"
 	"github.com/vagrant-technology/squad-leader/game"
+	"github.com/vagrant-technology/squad-leader/handlers"
 )
 
 func ConfigureWS(app *fiber.App) {
@@ -14,6 +15,23 @@ func ConfigureWS(app *fiber.App) {
 		}
 		return fiber.ErrUpgradeRequired
 	})
+
+	app.Get("/ws/:room/:user", websocket.New(handlers.JoinRoom))
+
+	go game.ClientHub()
+}
+
+func ConfigureApi(app *fiber.App) {
+	api := app.Group("/api")
+
+	// ----- Web API section -----
+	api.Get("/", func(c *fiber.Ctx) error {
+		//TODO: Return Homepage/app (UI/static)
+		return c.SendString("Hello World")
+		//TODO: In Test, use root for stats/debug
+	})
+
+	api.Post("/CreateRoom", handlers.CreateRoom)
 }
 
 func main() {
@@ -23,10 +41,9 @@ func main() {
 	app := fiber.New(serverConfig)
 
 	ConfigureWS(app)
+	ConfigureApi(app)
+	//apiGroup := app.Group("/api")
+	//Router(app)
 
-	go game.ClientHub()
-
-	Router(app)
-
-	app.Listen(":3000")
+	app.Listen(":3001")
 }
