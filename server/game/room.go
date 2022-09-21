@@ -5,17 +5,17 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
-	"github.com/vagrant-technology/squad-leader/game/grid"
 	"github.com/vagrant-technology/squad-leader/store"
 )
 
 var rooms = make(map[uuid.UUID]*Room)
 
-type LobbyUsers map[*store.User]bool
+//type LobbyUsers map[*store.User]bool
 
 type Lobby struct {
-	Users LobbyUsers
+	Users map[*store.User]bool // Ready Map
 	Room  *Room
+	Hub   *ClientHub[Lobby]
 }
 
 type Room struct {
@@ -23,7 +23,7 @@ type Room struct {
 	Owner *store.User `json:"owner"`
 	//Lobby map[*store.User]bool //True indicates Ready player
 	Lobby *Lobby
-	Grid  *grid.HexGrid
+	//Grid  *grid.HexGrid
 }
 
 func NewRoom(user *store.User) string {
@@ -50,15 +50,16 @@ func GetRoom(room string) *Room {
 	return rooms[roomID]
 }
 
-// ----- -----
+// ----- TODO: Interface?-----
 
 func (r *Room) NewLobby() *Lobby {
 	lobby := new(Lobby)
-	lobby.Users = make(LobbyUsers)
+	lobby.Users = make(map[*store.User]bool)
 	lobby.Room = r
 
 	// Start a messaging Hub for this lobby
-	lobbyHub := new(ClientHub[Lobby])
+	lobby.Hub = NewClientHub(lobby)
+	lobby.Hub.StartHub()
 
 	return lobby
 }
