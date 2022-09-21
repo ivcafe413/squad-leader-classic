@@ -31,7 +31,7 @@ function CreateRoom() {
 
             if(response.status === 200) {
                 alert("Room ID: " + responseJSON.room + " Created!");
-                navigate("/")
+                navigate("/");
             } else {
                 alert("Cannot create the room");
             }
