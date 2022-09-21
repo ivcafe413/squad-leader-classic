@@ -23,7 +23,7 @@ func CreateRoom(c *fiber.Ctx) error {
 		return err
 	}
 
-	fmt.Println("Room Owner: " + u.Username)
+	//fmt.Println("Room Owner: " + u.Username)
 	user := store.NewUser(u.Username)
 	roomID := game.NewRoom(user)
 
@@ -40,7 +40,7 @@ func JoinRoom(c *fiber.Ctx) error {
 	//Requires Room and User IDs to function
 	// userID, _ := strconv.Atoi(c.Params("user"))
 	joiner := struct {
-		Room string `json:"roomID`
+		Room string `json:"roomID"`
 		User string `json:"username"`
 	}{}
 
@@ -55,13 +55,13 @@ func JoinRoom(c *fiber.Ctx) error {
 	if room = game.GetRoom(joiner.Room); room == nil {
 		//Room Not Found
 		fmt.Println("Join Room Error: Room Not Found")
-		return errors.New("Room Not Found")
+		return errors.New("room not found")
 	}
 
 	var user *store.User
 	if user = store.LookupUser(joiner.User); user == nil {
 		fmt.Println("Join Room Error: User Not Found")
-		return errors.New("User Not Found")
+		return errors.New("user not found")
 	}
 
 	if err := room.JoinLobby(user); err != nil {

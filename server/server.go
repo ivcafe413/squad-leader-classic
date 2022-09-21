@@ -3,7 +3,6 @@ package main
 import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/websocket/v2"
-	"github.com/vagrant-technology/squad-leader/game"
 	"github.com/vagrant-technology/squad-leader/handlers"
 )
 
@@ -17,21 +16,15 @@ func ConfigureWS(app *fiber.App) {
 	})
 
 	app.Get("/ws/:room/:user", websocket.New(handlers.LobbyConnection))
-	app.Get("/ws/game/:session", websocket.New(handlers.GameConnection))
+	//app.Get("/ws/game/:session", websocket.New(handlers.GameConnection))
 
-	go game.ClientHub()
+	//go game.ClientHub()
 }
 
 func ConfigureApi(app *fiber.App) {
 	api := app.Group("/api")
 
 	// ----- Web API section -----
-	api.Get("/", func(c *fiber.Ctx) error {
-		//TODO: Return Homepage/app (UI/static)
-		return c.SendString("Hello World")
-		//TODO: In Test, use root for stats/debug
-	})
-
 	api.Post("/CreateRoom", handlers.CreateRoom)
 	api.Post("/JoinRoom", handlers.JoinRoom)
 }

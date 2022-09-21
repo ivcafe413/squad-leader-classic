@@ -7,6 +7,8 @@ import (
 	"github.com/vagrant-technology/squad-leader/store"
 )
 
+type messageProcessor func(string) error
+
 type ClientHub[T any] struct {
 	hubEntity *T
 	clients   map[*websocket.Conn]*Client[T] //
@@ -17,16 +19,25 @@ type ClientHub[T any] struct {
 
 type Client[T any] struct {
 	hub        *ClientHub[T]
-	connection *websocket.Conn
+	Connection *websocket.Conn
 	user       *store.User
+	processor  messageProcessor
 }
 
-func NewClient[T any](hub *ClientHub[T], conn *websocket.Conn, user *store.User) *Client[T] {
+func (client *Client[T]) Process(msg string) error {
+	return client.processor(msg)
+}
+
+func NewClient[T any](hub *ClientHub[T], conn *websocket.Conn, user *store.User, processor messageProcessor) *Client[T] {
 	client := new(Client[T])
 
 	client.hub = hub
-	client.connection = conn
+	client.Connection = conn
 	client.user = user
+	client.processor = processor
+
+	// Go ahead and Register the client to the hub, since we have it
+	hub.Register <- client
 
 	return client
 }
@@ -46,7 +57,7 @@ func (hub *ClientHub[T]) StartHub() {
 	for {
 		select {
 		case rc := <-hub.Register:
-			hub.clients[rc.connection] = rc
+			hub.clients[rc.Connection] = rc
 			fmt.Println("Client connection established")
 
 		case dc := <-hub.Remove:

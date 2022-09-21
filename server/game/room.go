@@ -2,7 +2,6 @@ package game
 
 import (
 	"errors"
-	"fmt"
 
 	"github.com/google/uuid"
 	"github.com/vagrant-technology/squad-leader/store"
@@ -14,8 +13,8 @@ var rooms = make(map[uuid.UUID]*Room)
 
 type Lobby struct {
 	Users map[*store.User]bool // Ready Map
-	Room  *Room
-	Hub   *ClientHub[Lobby]
+	//Room  *Room
+	Hub *ClientHub[Lobby]
 }
 
 type Room struct {
@@ -28,7 +27,7 @@ type Room struct {
 
 func NewRoom(user *store.User) string {
 	roomID := uuid.New()
-	fmt.Println("Test New UUID: " + roomID.String())
+	//fmt.Println("Test New UUID: " + roomID.String())
 	// newRoom := Room {
 	// 	ID: gameID,
 	// 	grid: *grid.NewHexGrid(33, 10),
@@ -55,11 +54,11 @@ func GetRoom(room string) *Room {
 func (r *Room) NewLobby() *Lobby {
 	lobby := new(Lobby)
 	lobby.Users = make(map[*store.User]bool)
-	lobby.Room = r
+	//lobby.Room = r
 
 	// Start a messaging Hub for this lobby
 	lobby.Hub = NewClientHub(lobby)
-	lobby.Hub.StartHub()
+	go lobby.Hub.StartHub()
 
 	return lobby
 }
@@ -67,9 +66,18 @@ func (r *Room) NewLobby() *Lobby {
 func (r *Room) JoinLobby(user *store.User) error {
 	// If the User is not already in the Lobby
 	if _, exists := r.Lobby.Users[user]; exists {
-		return errors.New("User already in Lobby")
+		return errors.New("user already in lobby")
 	}
 
 	r.Lobby.Users[user] = false
 	return nil
+}
+
+func (r *Room) MarshalLobby() (map[string]bool, error) {
+	jsonLobby := make(map[string]bool)
+	for k, v := range r.Lobby.Users {
+		jsonLobby[k.Username] = v
+	}
+
+	return jsonLobby, nil
 }

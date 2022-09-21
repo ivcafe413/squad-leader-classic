@@ -29,23 +29,6 @@ func Test_CreateRoomRoute(t *testing.T) {
 
 	ConfigureApi(app)
 
-	// ----- Test 1 - Basic Routing 200
-	// getReq := httptest.NewRequest("GET", "/", nil)
-	// getResp, _ := app.Test(getReq, 1)
-
-	// if getResp.StatusCode != 200 {
-	// 	t.Fatal("Basic Root GET request failing - probably app/router not initializing properly")
-	// }
-
-	// defer getResp.Body.Close()
-
-	// respString, err := io.ReadAll(getResp.Body)
-	// if err != nil {
-	// 	t.Fatal(err)
-	// }
-
-	// fmt.Println(string(respString))
-
 	// ----- Create Room -----
 	testUser := struct {
 		Username string `json:"username"`
@@ -145,7 +128,7 @@ func Test_CreateAndJoinRoom(t *testing.T) {
 	fmt.Println("Room ID: " + roomPayload.Room)
 	fmt.Println("Username: " + roomPayload.User.Username)
 
-	// ----- Step 2: Join the Room -----
+	// ----- Step 2: Join the Room Lobby -----
 
 	//testUrl := "ws://localhost:3000/ws"
 	wsUrl := "ws://" + ln.Addr().String() + "/ws/" + roomPayload.Room + "/" + roomPayload.User.Username
@@ -158,14 +141,28 @@ func Test_CreateAndJoinRoom(t *testing.T) {
 	if joinErr != nil {
 		t.Fatal(joinErr.Error())
 	}
+
 	defer ws.Close()
 
-	// if joinRes.StatusCode != fiber.StatusOK {
-	// 	t.Fatalf("Response is %v, not 200", joinRes.StatusCode)
-	// }
+	// ----- Step 3: Send a test message -----
+	if err := ws.WriteMessage(websocket.TextMessage, []byte("ready")); err != nil {
+		t.Fatalf("%v", err)
+	}
 
-	//fmt.Println("Connection: " + joinRes.Header.Get("Connection"))
-	//fmt.Println("Upgrade: " + joinRes.Header.Get("Upgrade"))
+	// Receive the response
+	_, reply, err := ws.ReadMessage()
+	if err != nil {
+		t.Fatalf("%v", err)
+	}
+	fmt.Println(string(reply))
 
-	//defer joinRes.Body.Close()
+	lobbyState := make(map[string]bool)
+	err = json.Unmarshal(reply, &lobbyState)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	fmt.Println(lobbyState)
+
+	// Deferred closes
 }
