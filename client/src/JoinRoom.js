@@ -1,11 +1,12 @@
 import React, {
     useState
 } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 function JoinRoom() {
-    const [room, setRoom] = useState("");
-    const [username, setUsername] = useState("");
+    const { state } = useLocation();
+    const [room, setRoom] = useState(state.room);
+    const [username, setUsername] = useState(state.username);
 
     const navigate = useNavigate();
 
@@ -22,7 +23,7 @@ function JoinRoom() {
                 headers: { "Content-Type": "application/json" }
             });
 
-            let responseJSON = await response.json();
+            let responseText = await response.text();
 
             if(response.status === 200) {
                 alert("Joining room " + room + ".....");
@@ -32,6 +33,9 @@ function JoinRoom() {
                         user: username
                     }
                 });
+            } else {
+                console.log(responseText);
+                alert("Could not Join Room");
             }
         } catch (err) {
             console.log(err);

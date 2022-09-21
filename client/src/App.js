@@ -9,6 +9,7 @@ import {
 import SplashScreen from './SplashScreen';
 import CreateRoom from './CreateRoom';
 import JoinRoom from './JoinRoom';
+import Lobby from './Lobby';
 
 class App extends Component {
   render() {
@@ -22,6 +23,7 @@ class App extends Component {
             <Route path="/" element={<SplashScreen/>}/>
             <Route path="/CreateRoom" element={<CreateRoom/>}/>
             <Route path="/JoinRoom" element={<JoinRoom/>}/>
+            <Route path="/Lobby" element={<Lobby/>}/>
           </Routes>
         </div>
       </HashRouter>
