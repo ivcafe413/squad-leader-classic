@@ -50,12 +50,15 @@ func GetRoom(room string) *Room {
 	return rooms[roomID]
 }
 
+// ----- -----
+
 func (r *Room) NewLobby() *Lobby {
 	lobby := new(Lobby)
 	lobby.Users = make(LobbyUsers)
 	lobby.Room = r
 
 	// Start a messaging Hub for this lobby
+	lobbyHub := new(ClientHub[Lobby])
 
 	return lobby
 }
