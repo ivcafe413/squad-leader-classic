@@ -10,7 +10,7 @@ import (
 )
 
 // ----- Local WS Connection logic for conn read/writes
-func startRead[T any](c *game.Client[T], cSignal chan bool) {
+func startRead[T game.Stateful](c *game.Client[T], cSignal chan bool) {
 	// Reading incoming from end client -> websocket
 	for {
 		mType, message, err := c.Connection.ReadMessage()
@@ -80,20 +80,25 @@ func LobbyConnection(c *websocket.Conn) {
 			room.Lobby.Users[user] = false
 		}
 
-		//Marshal the user lobby into JSON for broadcast
-		flatLobby, _ := room.MarshalLobby()
-		lobMsg, err := json.Marshal(flatLobby)
-		if err != nil {
-			return err
-		}
-
-		hub.Broadcast <- lobMsg
+		hub.Broadcast <- room.Lobby
 		return nil
 	}
 	client := game.NewClient(hub, c, user, lobbyMessage)
 
 	// Register Client to the Lobby Hub -- Moved into ClientConn logic above (NewClient)
 	//hub.Register <- client
+
+	// Write out the initial lobby state on initial connection
+	message, _ := json.Marshal(room.Lobby.ReportState())
+	//for conn := range hub.clients {
+	if err := c.WriteMessage(websocket.TextMessage, message); err != nil {
+		// Client Connection write error
+		//hub.Remove <- c
+		c.WriteMessage(websocket.CloseMessage, []byte{})
+		//c.Close()
+		return
+	}
+	//}
 
 	// Start reading from client connection
 	go startRead(client, signalClose)

@@ -1,6 +1,7 @@
 package game
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/gofiber/websocket/v2"
@@ -9,15 +10,19 @@ import (
 
 type messageProcessor func(string) error
 
-type ClientHub[T any] struct {
-	hubEntity *T
-	clients   map[*websocket.Conn]*Client[T] //
-	Register  chan *Client[T]
-	Remove    chan *websocket.Conn
-	Broadcast chan []byte
+type Stateful interface {
+	ReportState() any
 }
 
-type Client[T any] struct {
+type ClientHub[T Stateful] struct {
+	//entity    T
+	clients   map[*websocket.Conn]*Client[T] //
+	register  chan *Client[T]
+	Remove    chan *websocket.Conn
+	Broadcast chan T
+}
+
+type Client[T Stateful] struct {
 	hub        *ClientHub[T]
 	Connection *websocket.Conn
 	user       *store.User
@@ -28,7 +33,7 @@ func (client *Client[T]) Process(msg string) error {
 	return client.processor(msg)
 }
 
-func NewClient[T any](hub *ClientHub[T], conn *websocket.Conn, user *store.User, processor messageProcessor) *Client[T] {
+func NewClient[T Stateful](hub *ClientHub[T], conn *websocket.Conn, user *store.User, processor messageProcessor) *Client[T] {
 	client := new(Client[T])
 
 	client.hub = hub
@@ -37,18 +42,18 @@ func NewClient[T any](hub *ClientHub[T], conn *websocket.Conn, user *store.User,
 	client.processor = processor
 
 	// Go ahead and Register the client to the hub, since we have it
-	hub.Register <- client
+	hub.register <- client
 
 	return client
 }
 
-func NewClientHub[T any](v *T) *ClientHub[T] {
+func NewClientHub[T Stateful](v T) *ClientHub[T] {
 	hub := new(ClientHub[T])
-	hub.hubEntity = v
+	//hub.hubEntity = v
 	hub.clients = make(map[*websocket.Conn]*Client[T])
-	hub.Register = make(chan *Client[T])
+	hub.register = make(chan *Client[T])
 	hub.Remove = make(chan *websocket.Conn)
-	hub.Broadcast = make(chan []byte)
+	hub.Broadcast = make(chan T)
 
 	return hub
 }
@@ -56,7 +61,7 @@ func NewClientHub[T any](v *T) *ClientHub[T] {
 func (hub *ClientHub[T]) StartHub() {
 	for {
 		select {
-		case rc := <-hub.Register:
+		case rc := <-hub.register:
 			hub.clients[rc.Connection] = rc
 			fmt.Println("Client connection established")
 
@@ -64,7 +69,8 @@ func (hub *ClientHub[T]) StartHub() {
 			delete(hub.clients, dc)
 			fmt.Println("Client connection closed")
 
-		case message := <-hub.Broadcast:
+		case state := <-hub.Broadcast:
+			message, _ := json.Marshal(state.ReportState())
 			for conn := range hub.clients {
 				if err := conn.WriteMessage(websocket.TextMessage, message); err != nil {
 					// Client Connection write error

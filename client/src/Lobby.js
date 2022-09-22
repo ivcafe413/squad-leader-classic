@@ -1,5 +1,6 @@
 import React, {
-    useState
+    useState,
+    useEffect
 } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import useWebSocket, { ReadyState } from "react-use-websocket";
@@ -11,19 +12,30 @@ function Lobby() {
 
     const [lobby, setLobby] = useState({})
 
+    useEffect(() => {
+        if (lastMessage !== null) {
+            var payload = JSON.parse(lastMessage.data);
+            console.log(payload);
+            setLobby(payload);
+        }
+    }, [lastMessage]);
+
     return (
         <div>
             <h2>Lobby {state.room}</h2>
             <ul>
                 {
-                    Object.keys(lobby).map((key, i) => (
-                        <li>
-                            <span>{key}: </span>
-                            <span>{lobby[key]}</span>
-                        </li>
-                    ))
+                    Object.keys(lobby).map((key, i) => {
+                        return (
+                            <li key={i}>
+                                <span>{key}: {lobby[key] ? "Ready" : "Not Ready"}</span>
+                            </li>
+                        );
+                    })
                 }
             </ul>
         </div>
     );
 }
+
+export default Lobby;

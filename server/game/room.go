@@ -14,7 +14,22 @@ var rooms = make(map[uuid.UUID]*Room)
 type Lobby struct {
 	Users map[*store.User]bool // Ready Map
 	//Room  *Room
-	Hub *ClientHub[Lobby]
+	Hub *ClientHub[*Lobby]
+}
+
+// Implement stateful interface
+func (lobby *Lobby) ReportState() any {
+	//Marshal the user lobby into JSON for broadcast
+	//flatLobby, _ := room.MarshalLobby()
+	jsonLobby := make(map[string]bool)
+	for k, v := range lobby.Users {
+		jsonLobby[k.Username] = v
+	}
+	//lobMsg, err := json.Marshal(flatLobby)
+	// if err != nil {
+	// 	return err
+	// }
+	return jsonLobby
 }
 
 type Room struct {
@@ -70,14 +85,13 @@ func (r *Room) JoinLobby(user *store.User) error {
 	}
 
 	r.Lobby.Users[user] = false
+
+	//Broadcast state change to clients
+	r.Lobby.Hub.Broadcast <- r.Lobby
 	return nil
 }
 
-func (r *Room) MarshalLobby() (map[string]bool, error) {
-	jsonLobby := make(map[string]bool)
-	for k, v := range r.Lobby.Users {
-		jsonLobby[k.Username] = v
-	}
+// func (r *Room) MarshalLobby() (map[string]bool, error) {
 
-	return jsonLobby, nil
-}
+// 	return jsonLobby, nil
+// }
