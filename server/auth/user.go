@@ -1,4 +1,4 @@
-package store
+package auth
 
 var users = make(map[int]*User)
 var usersLookup = make(map[string]int)

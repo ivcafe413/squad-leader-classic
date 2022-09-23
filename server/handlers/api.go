@@ -5,8 +5,8 @@ import (
 	"fmt"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/vagrant-technology/squad-leader/game"
-	"github.com/vagrant-technology/squad-leader/store"
+	"github.com/vagrant-technology/squad-leader/auth"
+	"github.com/vagrant-technology/squad-leader/session"
 )
 
 // ----- Create Room - RESTful API Call to create room & user
@@ -24,8 +24,8 @@ func CreateRoom(c *fiber.Ctx) error {
 	}
 
 	//fmt.Println("Room Owner: " + u.Username)
-	user := store.NewUser(u.Username)
-	roomID := game.NewRoom(user)
+	user := auth.NewUser(u.Username)
+	roomID := session.NewRoom(user)
 
 	return c.JSON(&fiber.Map{
 		"success": true,
@@ -51,20 +51,20 @@ func JoinRoom(c *fiber.Ctx) error {
 	}
 
 	//roomID := uuid.MustParse(joiner.Room)
-	var room *game.Room
-	if room = game.GetRoom(joiner.Room); room == nil {
+	var room *session.Room
+	if room = session.GetRoom(joiner.Room); room == nil {
 		//Room Not Found
 		fmt.Println("Join Room Error: Room Not Found")
 		return errors.New("room not found")
 	}
 
-	var user *store.User
-	if user = store.LookupUser(joiner.User); user == nil {
+	var user *auth.User
+	if user = auth.LookupUser(joiner.User); user == nil {
 		fmt.Println("Join Room Error: User Not Found")
 		return errors.New("user not found")
 	}
 
-	if err := room.JoinLobby(user); err != nil {
+	if err := room.Join(user); err != nil {
 		fmt.Println("Join Room Error: " + err.Error())
 		return err
 	}

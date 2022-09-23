@@ -5,12 +5,12 @@ import (
 	"fmt"
 
 	"github.com/gofiber/websocket/v2"
-	"github.com/vagrant-technology/squad-leader/game"
-	"github.com/vagrant-technology/squad-leader/store"
+	"github.com/vagrant-technology/squad-leader/auth"
+	"github.com/vagrant-technology/squad-leader/session"
 )
 
 // ----- Local WS Connection logic for conn read/writes
-func startRead[T game.Stateful](c *game.Client[T], cSignal chan bool) {
+func startRead[T session.Stateful](c *session.Client[T], cSignal chan bool) {
 	// Reading incoming from end client -> websocket
 	for {
 		mType, message, err := c.Connection.ReadMessage()
@@ -43,7 +43,6 @@ func LobbyConnection(c *websocket.Conn) {
 
 	// Close WS connections appropriately
 	defer func() {
-		c.Close()
 		close(signalClose)
 	}()
 
@@ -53,43 +52,29 @@ func LobbyConnection(c *websocket.Conn) {
 
 	//var room *game.Room
 	// Need Lobby Hub early
-	room := game.GetRoom(roomID)
+	room := session.GetRoom(roomID)
 	if room == nil {
 		//Room Not Found
 		fmt.Println("Lobby Connection Error: Room Not Found")
 		return //errors.New("room not found") //Call deferred close
 	}
-	hub := room.Lobby.Hub
+	// hub := room.Lobby.Hub
 
-	defer func() {
-		hub.Remove <- c
-	}()
-
-	var user *store.User
-	if user = store.LookupUser(username); user == nil {
+	var user *auth.User
+	if user = auth.LookupUser(username); user == nil {
 		fmt.Println("Lobby Connection Error: User Not Found")
 		return //errors.New("user not found")
 	}
 
-	// Define/pass message processor strategy
-	var lobbyMessage = func(msg string) error {
-		//Make change to room Lobby State/Ready State
-		if msg == "ready" {
-			room.Lobby.Users[user] = true
-		} else {
-			room.Lobby.Users[user] = false
-		}
-
-		hub.Broadcast <- room.Lobby
-		return nil
-	}
-	client := game.NewClient(hub, c, user, lobbyMessage)
+	//client := session.NewClient(hub, c, user, lobbyMessage)
+	client := room.NewLobbySession(c, user)
+	defer client.Close()
 
 	// Register Client to the Lobby Hub -- Moved into ClientConn logic above (NewClient)
 	//hub.Register <- client
 
 	// Write out the initial lobby state on initial connection
-	message, _ := json.Marshal(room.Lobby.ReportState())
+	message, _ := json.Marshal(room.LobbyState())
 	//for conn := range hub.clients {
 	if err := c.WriteMessage(websocket.TextMessage, message); err != nil {
 		// Client Connection write error

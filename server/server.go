@@ -17,8 +17,6 @@ func ConfigureWS(app *fiber.App) {
 
 	app.Get("/ws/:room/:user", websocket.New(handlers.LobbyConnection))
 	//app.Get("/ws/game/:session", websocket.New(handlers.GameConnection))
-
-	//go game.ClientHub()
 }
 
 func ConfigureApi(app *fiber.App) {

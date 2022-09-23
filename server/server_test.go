@@ -16,7 +16,7 @@ import (
 
 	// "github.com/gofiber/websocket/v2"
 	"github.com/gorilla/websocket"
-	"github.com/vagrant-technology/squad-leader/store"
+	"github.com/vagrant-technology/squad-leader/auth"
 	// "github.com/vagrant-technology/squad-leader/game"
 )
 
@@ -61,7 +61,7 @@ func Test_CreateRoomRoute(t *testing.T) {
 	//respRoom := new(game.Room)
 	respJson := struct {
 		Room string     `json:"room"`
-		User store.User `json:"user"`
+		User auth.User `json:"user"`
 	}{}
 	jsonErr := json.NewDecoder(postResp.Body).Decode(&respJson)
 	if jsonErr != nil {
@@ -118,7 +118,7 @@ func Test_CreateAndJoinRoom(t *testing.T) {
 
 	roomPayload := struct {
 		Room string     `json:"room"`
-		User store.User `json:"user"`
+		User auth.User `json:"user"`
 	}{}
 
 	if err := json.NewDecoder(cRes.Body).Decode(&roomPayload); err != nil {
