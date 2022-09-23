@@ -12,12 +12,8 @@ import (
 
 	//"github.com/fasthttp/websocket"
 	"github.com/gofiber/fiber/v2"
-	//"github.com/valyala/fasthttp/fasthttputil"
-
-	// "github.com/gofiber/websocket/v2"
 	"github.com/gorilla/websocket"
 	"github.com/vagrant-technology/squad-leader/auth"
-	// "github.com/vagrant-technology/squad-leader/game"
 )
 
 func Test_CreateRoomRoute(t *testing.T) {
@@ -60,7 +56,7 @@ func Test_CreateRoomRoute(t *testing.T) {
 	//respString, err = io.ReadAll(postResp.Body)
 	//respRoom := new(game.Room)
 	respJson := struct {
-		Room string     `json:"room"`
+		Room string    `json:"roomID"`
 		User auth.User `json:"user"`
 	}{}
 	jsonErr := json.NewDecoder(postResp.Body).Decode(&respJson)
@@ -102,7 +98,7 @@ func Test_CreateAndJoinRoom(t *testing.T) {
 	// ----- Step 1: Create and verify Game Room -----
 	u := struct {
 		Username string `json:"username"`
-	}{Username: "Alpha Dog"}
+	}{Username: "AlphaDog"}
 	payload, _ := json.Marshal(u)
 
 	cReq := httptest.NewRequest("POST", "/api/CreateRoom", bytes.NewReader(payload))
@@ -117,7 +113,7 @@ func Test_CreateAndJoinRoom(t *testing.T) {
 	defer cRes.Body.Close()
 
 	roomPayload := struct {
-		Room string     `json:"room"`
+		Room string    `json:"roomID"`
 		User auth.User `json:"user"`
 	}{}
 
@@ -129,7 +125,26 @@ func Test_CreateAndJoinRoom(t *testing.T) {
 	fmt.Println("Username: " + roomPayload.User.Username)
 
 	// ----- Step 2: Join the Room Lobby -----
+	//joinPayload := json.Marshal()
+	joiner := struct {
+		RoomID string `json:"roomID"`
+		Username string `json:"username"`
+	}{
+		RoomID: roomPayload.Room,
+		Username: roomPayload.User.Username,
+	}
+	jp, _ := json.Marshal(joiner)
+	jReq := httptest.NewRequest("POST", "/api/JoinRoom", bytes.NewReader(jp))
+	jReq.Header.Set("Content-Type", "application/json")
 
+	jRes, err := app.Test(jReq)
+	if err != nil {
+		t.Fatal(err.Error())
+	}
+
+	defer jRes.Body.Close()
+
+	// ----- Step 3: Join the Lobby via Websocket Connection -----
 	//testUrl := "ws://localhost:3000/ws"
 	wsUrl := "ws://" + ln.Addr().String() + "/ws/" + roomPayload.Room + "/" + roomPayload.User.Username
 	fmt.Println("WS Join URL: " + wsUrl)
@@ -144,7 +159,14 @@ func Test_CreateAndJoinRoom(t *testing.T) {
 
 	defer ws.Close()
 
-	// ----- Step 3: Send a test message -----
+	// Receive the initial state
+	_, iState, err := ws.ReadMessage()
+	if err != nil {
+		t.Fatalf("%v", err)
+	}
+	fmt.Println("WS Server Initial State: " + string(iState))
+
+	// ----- Step 4: Send a test message to Lobby WS-----
 	if err := ws.WriteMessage(websocket.TextMessage, []byte("ready")); err != nil {
 		t.Fatalf("%v", err)
 	}
@@ -154,7 +176,7 @@ func Test_CreateAndJoinRoom(t *testing.T) {
 	if err != nil {
 		t.Fatalf("%v", err)
 	}
-	fmt.Println(string(reply))
+	fmt.Println("WS Server Reply: " + string(reply))
 
 	lobbyState := make(map[string]bool)
 	err = json.Unmarshal(reply, &lobbyState)
@@ -162,7 +184,7 @@ func Test_CreateAndJoinRoom(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	fmt.Println(lobbyState)
+	//fmt.Println(lobbyState)
 
 	// Deferred closes
 }

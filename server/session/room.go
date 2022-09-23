@@ -2,6 +2,7 @@ package session
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/gofiber/websocket/v2"
 	"github.com/google/uuid"
@@ -13,9 +14,8 @@ var rooms = make(map[uuid.UUID]*Room)
 //type LobbyUsers map[*store.User]bool
 
 type Room struct {
-	ID    uuid.UUID   `json:"id"`
-	Owner *auth.User `json:"owner"`
-	//Lobby map[*store.User]bool //True indicates Ready player
+	ID    uuid.UUID		`json:"id"`
+	Owner *auth.User	`json:"owner"`
 	lobby *Lobby
 	//Grid  *grid.HexGrid
 }
@@ -59,6 +59,11 @@ func (r *Room) NewLobbySession(c *websocket.Conn, user *auth.User) *Client[*Lobb
 	// Define/pass message processor strategy
 	var lobbyMessage = func(msg string) error {
 		//Make change to room Lobby State/Ready State
+		fmt.Println("Updating Lobby... ")
+		fmt.Println("Room: " + r.ID.String())
+		fmt.Println("User: " + user.Username)
+		fmt.Println("Message: " + msg)
+
 		if msg == "ready" {
 			r.lobby.Users[user] = true
 		} else {

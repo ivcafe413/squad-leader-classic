@@ -61,12 +61,12 @@ func LobbyConnection(c *websocket.Conn) {
 	// hub := room.Lobby.Hub
 
 	var user *auth.User
-	if user = auth.LookupUser(username); user == nil {
-		fmt.Println("Lobby Connection Error: User Not Found")
+	if user = auth.GetUserByName(username); user == nil {
+		fmt.Println("Lobby Connection Error: User Not Found: " + username)
 		return //errors.New("user not found")
 	}
-
-	//client := session.NewClient(hub, c, user, lobbyMessage)
+	//TODO: BUG!!!
+	fmt.Println("Creating Lobby Client for " + user.Username + ", " + username)
 	client := room.NewLobbySession(c, user)
 	defer client.Close()
 

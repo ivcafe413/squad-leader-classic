@@ -7,7 +7,7 @@ import useWebSocket, { ReadyState } from "react-use-websocket";
 
 function Lobby() {
     const { state } = useLocation();
-    const socketUrl = "ws://127.0.0.1:3001/ws/" + state.room + "/" + state.user;
+    const socketUrl = "ws://127.0.0.1:3001/ws/" + state.roomID + "/" + state.username;
     const { sendMessage, lastMessage, readyState } = useWebSocket(socketUrl);
 
     const [lobby, setLobby] = useState({})
@@ -22,7 +22,7 @@ function Lobby() {
 
     return (
         <div>
-            <h2>Lobby {state.room}</h2>
+            <h2>Lobby {state.roomID}</h2>
             <ul>
                 {
                     Object.keys(lobby).map((key, i) => {

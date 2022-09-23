@@ -12,7 +12,7 @@ import (
 // ----- Create Room - RESTful API Call to create room & user
 func CreateRoom(c *fiber.Ctx) error {
 	//Populate instance of user
-	//user := new(store.User)
+	//TODO: Abstract out Auth flow, User Create should not be side effect of Create Room
 	u := struct {
 		Username string `json:"username"`
 	}{}
@@ -29,7 +29,7 @@ func CreateRoom(c *fiber.Ctx) error {
 
 	return c.JSON(&fiber.Map{
 		"success": true,
-		"room":    roomID,
+		"roomID":  roomID,
 		"user":    user,
 	})
 	//return c.SendString(roomID)
@@ -40,8 +40,8 @@ func JoinRoom(c *fiber.Ctx) error {
 	//Requires Room and User IDs to function
 	// userID, _ := strconv.Atoi(c.Params("user"))
 	joiner := struct {
-		Room string `json:"roomID"`
-		User string `json:"username"`
+		RoomID string `json:"roomID"`
+		Username string `json:"username"`
 	}{}
 
 	//client := new(game.Client)
@@ -52,14 +52,14 @@ func JoinRoom(c *fiber.Ctx) error {
 
 	//roomID := uuid.MustParse(joiner.Room)
 	var room *session.Room
-	if room = session.GetRoom(joiner.Room); room == nil {
+	if room = session.GetRoom(joiner.RoomID); room == nil {
 		//Room Not Found
 		fmt.Println("Join Room Error: Room Not Found")
 		return errors.New("room not found")
 	}
 
 	var user *auth.User
-	if user = auth.LookupUser(joiner.User); user == nil {
+	if user = auth.GetUserByName(joiner.Username); user == nil {
 		fmt.Println("Join Room Error: User Not Found")
 		return errors.New("user not found")
 	}

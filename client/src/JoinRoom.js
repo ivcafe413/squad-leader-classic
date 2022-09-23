@@ -5,7 +5,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 
 function JoinRoom() {
     const { state } = useLocation();
-    const [room, setRoom] = useState(state.room);
+    const [roomID, setRoomID] = useState(state.room);
     const [username, setUsername] = useState(state.username);
 
     const navigate = useNavigate();
@@ -17,7 +17,7 @@ function JoinRoom() {
             let response = await fetch("/api/JoinRoom", {
                 method: "POST",
                 body: JSON.stringify({
-                    roomID: room,
+                    roomID: roomID,
                     username: username
                 }),
                 headers: { "Content-Type": "application/json" }
@@ -26,11 +26,11 @@ function JoinRoom() {
             let responseText = await response.text();
 
             if(response.status === 200) {
-                alert("Joining room " + room + ".....");
+                alert("Joining room " + roomID + ".....");
                 navigate("/Lobby", {
                     state: {
-                        room: room,
-                        user: username
+                        roomID: roomID,
+                        username: username
                     }
                 });
             } else {
@@ -49,8 +49,8 @@ function JoinRoom() {
             <form onSubmit={handleSubmit}>
             <label>
                 Room #:
-                <input type="text" value={room}
-                    onChange={(ev) => setRoom(ev.target.value)}></input>
+                <input type="text" value={roomID}
+                    onChange={(ev) => setRoomID(ev.target.value)}></input>
             </label>
             <label>
                 User:

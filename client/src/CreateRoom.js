@@ -30,11 +30,11 @@ function CreateRoom() {
             let responseJSON = await response.json();
 
             if(response.status === 200) {
-                alert("Room ID: " + responseJSON.room + " Created!");
+                alert("Room ID: " + responseJSON.roomID + " Created!");
                 navigate("/JoinRoom", {
                     state: {
                         username: username,
-                        room: responseJSON.room
+                        roomID: responseJSON.roomID
                     }
                 });
             } else {
