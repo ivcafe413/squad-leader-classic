@@ -5,7 +5,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 
 function JoinRoom() {
     const { state } = useLocation();
-    const [roomID, setRoomID] = useState(state.room);
+    const [roomID, setRoomID] = useState(state.roomID);
     const [username, setUsername] = useState(state.username);
 
     const navigate = useNavigate();

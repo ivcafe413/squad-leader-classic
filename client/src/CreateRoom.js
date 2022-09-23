@@ -7,13 +7,6 @@ import { useNavigate } from 'react-router-dom';
 function CreateRoom() {
     const [username, setUsername] = useState("");
     const navigate = useNavigate();
-// constructor(props) {
-//     super(props)
-//     this.state = { username: "" };
-
-//     //this.handleChange = this.handleChange.bind(this);
-//     this.handleSubmit = this.handleSubmit.bind(this);
-// }
 
     let handleSubmit = async(event) => {
         event.preventDefault();
