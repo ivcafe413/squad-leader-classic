@@ -1,6 +1,7 @@
 package coordinates
 
 import (
+	"fmt"
 	"math"
 	"errors"
 )
@@ -46,11 +47,15 @@ type HexCoordinates struct {
 	q, r, s int
 }
 
+func (hc HexCoordinates) MarshalText() ([]byte, error) {
+	return []byte(fmt.Sprintf("%d, %d, %d", hc.q, hc.r, hc.s)), nil
+}
+
 // Need to use pointer on constructors
-func NewHex(c ...int) (*HexCoordinates, error) {
+func NewHex(c ...int) (HexCoordinates, error) {
 	//Only accepts coordinates or 2-3 dimensions
 	if len(c) < 2 || len(c) > 3 {
-		return nil, errors.New("incorrect coordinate size for Hex")
+		return HexCoordinates{-1, -1, -1}, errors.New("incorrect coordinate size for Hex")
 	}
 
 	//Store 3rd axial coordinate if not already present
@@ -64,7 +69,7 @@ func NewHex(c ...int) (*HexCoordinates, error) {
 
 	r := HexCoordinates {c[0], c[1], s}
 
-	return &r, nil
+	return r, nil
 }
 
 // func (a HexCoordinates) Equals(b HexCoordinates) bool {

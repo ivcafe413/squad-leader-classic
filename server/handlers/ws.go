@@ -66,7 +66,7 @@ func LobbyConnection(c *websocket.Conn) {
 		return //errors.New("user not found")
 	}
 	//TODO: BUG!!!
-	fmt.Println("Creating Lobby Client for " + user.Username + ", " + username)
+	fmt.Println("Creating Lobby Client for " + user.Username)
 	client := room.NewLobbySession(c, user)
 	defer client.Close()
 

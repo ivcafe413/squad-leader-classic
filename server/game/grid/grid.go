@@ -1,6 +1,9 @@
 package grid
 
 import (
+	"encoding/json"
+	//"fmt"
+
 	"github.com/vagrant-technology/squad-leader/game/grid/coordinates"
 	"github.com/vagrant-technology/squad-leader/game/grid/spaces"
 )
@@ -13,22 +16,34 @@ type GameGrid[T coordinates.GridCoordinates[T]] interface {
 }
 
 // ----- Structs -----
-type hexMap map[coordinates.HexCoordinates]*spaces.GridSpace
+type HexMap map[coordinates.HexCoordinates]*spaces.GridSpace
+
+// TODO: Define Marshaling interface implementation
+func (hm HexMap) MarshalJSON() ([]byte, error) {
+	//return json.Marshal(hm)
+	jsonMap := make(map[string]spaces.GridSpace)
+	for k, v := range hm {
+		jsonKey, _ := k.MarshalText()
+		jsonMap[string(jsonKey)] = *v
+	}
+
+	return json.Marshal(jsonMap)
+}
 
 type HexGrid struct {
 	//layers	[]GridLayer
-	hexMap
-	generationStrat MapGenerationStrategy[coordinates.HexCoordinates]
+	HexMap	`json:"map"`
+	generationStrat MapGenerationStrategy[coordinates.HexCoordinates]	`json:"-"`
 }
 
 // Getter/Setter for embedded Map
 func (hexGrid *HexGrid) Get(hc coordinates.HexCoordinates) (*spaces.GridSpace, bool) {
-	result, exists := hexGrid.hexMap[hc]
+	result, exists := hexGrid.HexMap[hc]
 	return result, exists
 }
 
 func (hexGrid *HexGrid) Set(hc coordinates.HexCoordinates, gs *spaces.GridSpace) {
-	hexGrid.hexMap[hc] = gs
+	hexGrid.HexMap[hc] = gs
 }
 
 func (hexGrid *HexGrid) SetMapGenerationStrat(strat MapGenerationStrategy[coordinates.HexCoordinates]) {
@@ -42,7 +57,7 @@ func (hexGrid *HexGrid) SetMapGenerationStrat(strat MapGenerationStrategy[coordi
 func NewHexGrid(c, r int) *HexGrid {
 	grid := new(HexGrid)
 
-	grid.hexMap = make(map[coordinates.HexCoordinates]*spaces.GridSpace)
+	grid.HexMap = make(map[coordinates.HexCoordinates]*spaces.GridSpace)
 	grid.generationStrat = &RectangularHexMapStrat{
 		RectangularMapStrat[coordinates.HexCoordinates]{
 			columns: c,

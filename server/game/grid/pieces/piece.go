@@ -12,7 +12,7 @@ type GamePiece interface {
 }
 
 type GridPiece struct {
-	name string
+	Name string `json:"name"`
 	//Piece metadata?
 }
 

@@ -14,8 +14,8 @@ type Lobby struct {
 
 // Implement stateful interface
 func (lobby *Lobby) ReportState() any {
-	//Marshal the user lobby into JSON for broadcast
-	//flatLobby, _ := room.MarshalLobby()
+	//Return the user lobby into Marshalable for broadcast
+	
 	jsonLobby := make(map[string]bool)
 	for k, v := range lobby.Users {
 		jsonLobby[k.Username] = v

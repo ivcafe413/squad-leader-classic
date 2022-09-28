@@ -1,6 +1,9 @@
 package grid
 
-import "github.com/vagrant-technology/squad-leader/game/grid/coordinates"
+import (
+	"github.com/vagrant-technology/squad-leader/game/grid/coordinates"
+	"github.com/vagrant-technology/squad-leader/game/grid/spaces"
+)
 
 type MapGenerationStrategy[T coordinates.GridCoordinates[T]] interface {
 	GenerateMap(GameGrid[T])
@@ -27,7 +30,7 @@ func (s *RectangularHexMapStrat) GenerateMap(gg GameGrid[coordinates.HexCoordina
 			newHex, _ := coordinates.NewHex(i, j)
 			//newSpace := spaces.New()
 			
-			gg.Set(*newHex, nil)
+			gg.Set(newHex, spaces.New("placeholder"))
 		}
 	}
 }
