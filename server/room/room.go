@@ -1,4 +1,4 @@
-package session
+package room
 
 import (
 	"errors"
@@ -7,6 +7,7 @@ import (
 	"github.com/gofiber/websocket/v2"
 	"github.com/google/uuid"
 	"github.com/vagrant-technology/squad-leader/auth"
+	"github.com/vagrant-technology/squad-leader/session"
 )
 
 var rooms = make(map[uuid.UUID]*Room)
@@ -16,8 +17,10 @@ var rooms = make(map[uuid.UUID]*Room)
 type Room struct {
 	ID    uuid.UUID		`json:"id"`
 	Owner *auth.User	`json:"owner"`
-	lobby *Lobby
+	lobby *Lobby		`json:"-"`
 	//Grid  *grid.HexGrid
+	//game *game.Game		`json:"-"`
+	IsClosed bool 		`json:"isClosed"`
 }
 
 func NewRoom(user *auth.User) string {
@@ -26,9 +29,9 @@ func NewRoom(user *auth.User) string {
 	room := new(Room)
 	room.ID = roomID
 	room.Owner = user
-	//newRoom.Lobby = make(map[*store.User]bool)
+	room.IsClosed = false
+	
 	room.lobby = NewLobby()
-	// newRoom.Grid = grid.NewHexGrid(33, 10)
 
 	rooms[roomID] = room
 
@@ -39,6 +42,10 @@ func GetRoom(room string) *Room {
 	roomID := uuid.MustParse(room)
 	return rooms[roomID]
 }
+
+// func GetLobby(r *Room) *Lobby {
+// 	return r.lobby
+// }
 
 // ----- TODO: Interface?-----
 
@@ -51,11 +58,22 @@ func (r *Room) Join(user *auth.User) error {
 	r.lobby.Users[user] = false
 
 	//Broadcast state change to clients
-	r.lobby.hub.broadcast <- r.lobby
+	r.lobby.hub.Broadcast <- r.lobby
 	return nil
 }
 
-func (r *Room) NewLobbySession(c *websocket.Conn, user *auth.User) *Client[*Lobby] {
+func (r *Room) Close() error {
+	r.lobby.hub.StopHub()
+
+	r.IsClosed = true
+	return nil
+}
+
+func (r *Room) GetClients() session.ClientConnections[*Lobby] {
+	return r.lobby.hub.Clients
+}
+
+func (r *Room) NewClient(c *websocket.Conn, user *auth.User) *session.Client[*Lobby] {
 	// Define/pass message processor strategy
 	var lobbyMessage = func(msg string) error {
 		//Make change to room Lobby State/Ready State
@@ -70,12 +88,16 @@ func (r *Room) NewLobbySession(c *websocket.Conn, user *auth.User) *Client[*Lobb
 			r.lobby.Users[user] = false
 		}
 
-		r.lobby.hub.broadcast <- r.lobby
+		r.lobby.hub.Broadcast <- r.lobby
 		return nil
 	}
 
-	return NewClient(r.lobby.hub, c, user, lobbyMessage)
+	return session.NewClient(r.lobby.hub, c, user, lobbyMessage)
 }
+
+// func (r *Room) RemoveClient(c *websocket.Conn) {
+// 	r.lobby.hub.Remove <- c
+// }
 
 func (r *Room) LobbyState() any {
 	return r.lobby.ReportState()

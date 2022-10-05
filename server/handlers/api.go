@@ -6,7 +6,8 @@ import (
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/vagrant-technology/squad-leader/auth"
-	"github.com/vagrant-technology/squad-leader/session"
+	"github.com/vagrant-technology/squad-leader/game"
+	"github.com/vagrant-technology/squad-leader/room"
 )
 
 // ----- Create Room - RESTful API Call to create room & user
@@ -25,7 +26,7 @@ func CreateRoom(c *fiber.Ctx) error {
 
 	//fmt.Println("Room Owner: " + u.Username)
 	user := auth.NewUser(u.Username)
-	roomID := session.NewRoom(user)
+	roomID := room.NewRoom(user)
 
 	return c.JSON(&fiber.Map{
 		"success": true,
@@ -51,8 +52,8 @@ func JoinRoom(c *fiber.Ctx) error {
 	}
 
 	//roomID := uuid.MustParse(joiner.Room)
-	var room *session.Room
-	if room = session.GetRoom(joiner.RoomID); room == nil {
+	var r *room.Room
+	if r = room.GetRoom(joiner.RoomID); r == nil {
 		//Room Not Found
 		fmt.Println("Join Room Error: Room Not Found")
 		return errors.New("room not found")
@@ -64,10 +65,60 @@ func JoinRoom(c *fiber.Ctx) error {
 		return errors.New("user not found")
 	}
 
-	if err := room.Join(user); err != nil {
+	if err := r.Join(user); err != nil {
 		fmt.Println("Join Room Error: " + err.Error())
 		return err
 	}
 
 	return nil
+}
+
+// ----- Start Game: Initiates a new Game session based on a ready Lobby.
+// Only the owner of a Room can start a game, and only if all Players in the Lobby are Ready.
+// A new Game instance with its own GUID is generated.
+// The existing websocket connections are re-used, with Lobby hooks closed and
+// Game channels/goroutines initiated to use the websocket for game state transmission
+func StartGame(c *fiber.Ctx) error {
+	//TODO: Convert these repeate anon struct declarations into a DTO
+	starter := struct {
+		RoomID string `json:"roomID"`
+		Username string `json:"username"`
+	}{}
+
+	if err := c.BodyParser(&starter); err != nil {
+		fmt.Println("Game Start Error: " + err.Error())
+		//TODO: Error/logging pattern
+		return err
+	}
+
+	room := room.GetRoom(starter.RoomID)
+	if room == nil {
+		//Room Not Found
+		fmt.Println("Game Start Error: Room Not Found")
+		return errors.New("room not found")
+	}
+
+	user := auth.GetUserByName(starter.Username)
+	if user == nil {
+		fmt.Println("Game Start Error: User Not Found")
+		return errors.New("user not found")
+	}
+
+	if user != room.Owner {
+		fmt.Println("Game Start Error: Only the Room Owner can start the Game")
+		return errors.New("not authorized to start game")
+	}
+
+	//Passing all checks, start the game
+	//First need to make a new Game, as Game is no longer member of Room
+	g := game.New()
+	//Iterate over all users in the room lobby and add them as players in the game
+	for conn, client := range room.GetClients() {
+		g.Add(client.GetUser())
+		// Need to pass Game ID back to Clients and allow clients to connect to the game
+		// TODO:
+	}
+	
+	// Gives path for authenticated route to Game connection (auth and session ID)
+	room.Close()
 }

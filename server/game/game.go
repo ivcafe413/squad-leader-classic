@@ -1,28 +1,51 @@
 package game
 
 import (
-	//"github.com/vagrant-technology/squad-leader/auth"
+	"github.com/gofiber/websocket/v2"
+	"github.com/google/uuid"
+	"github.com/vagrant-technology/squad-leader/auth"
 	"github.com/vagrant-technology/squad-leader/game/grid"
 	"github.com/vagrant-technology/squad-leader/session"
 )
 
+var games = make(map[uuid.UUID]*Game)
+
 type Game struct {
-	//Players []*auth.User
-	hub *session.ClientHub[*Game]
-	grid *grid.HexGrid
+	ID uuid.UUID `json:"id"`
+	Players map[*auth.User]bool `json:"players"` //Player Connection Map
+	Grid *grid.HexGrid `json:"grid"`
+
+	hub *session.ClientHub[*Game] `json:"-"`
 }
 
 func (game *Game) ReportState() any {
-	return game.grid
+	return game.Grid
+}
+
+func (g *Game) Add(u *auth.User) {
+	g.Players[u] = false
+}
+
+func (game *Game) Start() error {
+
+}
+
+func (game *Game) NewClient(c *websocket.Conn, user *auth.User) *session.Client[*Game] {
+
 }
 
 // -----
 
-func NewGame() *Game {
+func New() *Game {
 	game := new(Game)
 
-	game.grid = grid.NewHexGrid(33, 10)
+	game.ID = uuid.New()
+	game.Players = make(map[*auth.User]bool)
+	game.Grid = grid.NewHexGrid(33, 10)
+
 	game.hub = session.NewClientHub(game)
+
+	games[game.ID] = game
 	
 	return game
 }

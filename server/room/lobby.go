@@ -1,15 +1,18 @@
-package session
+package room
 
 import (
 	//"errors"
 
 	"github.com/vagrant-technology/squad-leader/auth"
+	"github.com/vagrant-technology/squad-leader/session"
 )
+
+//type LobbyConnections ClientConnections[*Lobby]
 
 type Lobby struct {
 	Users map[*auth.User]bool // Ready Map
 	//Room  *Room
-	hub *ClientHub[*Lobby]
+	hub *session.ClientHub[*Lobby]
 }
 
 // Implement stateful interface
@@ -30,7 +33,7 @@ func NewLobby() *Lobby {
 	//lobby.Room = r
 
 	// Start a messaging Hub for this lobby
-	lobby.hub = NewClientHub(lobby)
+	lobby.hub = session.NewClientHub(lobby)
 	go lobby.hub.StartHub()
 
 	return lobby

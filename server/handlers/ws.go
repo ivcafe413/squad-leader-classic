@@ -6,14 +6,17 @@ import (
 
 	"github.com/gofiber/websocket/v2"
 	"github.com/vagrant-technology/squad-leader/auth"
+	"github.com/vagrant-technology/squad-leader/room"
 	"github.com/vagrant-technology/squad-leader/session"
 )
 
 // ----- Local WS Connection logic for conn read/writes
-func startRead[T session.Stateful](c *session.Client[T], cSignal chan bool) {
+func startRead[T session.Stateful](c *session.Client[T]) {
+	defer c.Close()
+
 	// Reading incoming from end client -> websocket
 	for {
-		mType, message, err := c.Connection.ReadMessage()
+		mType, message, err := c.ReadMessage()
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
 				//log.Println("read error:", err)
@@ -24,8 +27,7 @@ func startRead[T session.Stateful](c *session.Client[T], cSignal chan bool) {
 		}
 
 		if mType == websocket.TextMessage {
-			//TODO: Interface/Strategy pattern
-			// if _, isLobby := any(c.).(game.Lobby); isLobby {
+			// When we receive client messages, we use the Process strategy
 			if c.Process(string(message)) != nil {
 				fmt.Println("client msg process error: " + err.Error())
 				break // out of for loop
@@ -33,27 +35,19 @@ func startRead[T session.Stateful](c *session.Client[T], cSignal chan bool) {
 		}
 	}
 
-	//Done, unblock the main connection thread
-	cSignal <- true
+	// Done, unblock the main connection thread
 }
 
 // ----- Lobby Connection: Active messaging to lobby for user ready status
 func LobbyConnection(c *websocket.Conn) {
-	signalClose := make(chan bool)
-
-	// Close WS connections appropriately
-	defer func() {
-		close(signalClose)
-	}()
-
 	//Requires Room and User IDs to function
 	username := c.Params("user")
 	roomID := c.Params("room")
 
 	//var room *game.Room
 	// Need Lobby Hub early
-	room := session.GetRoom(roomID)
-	if room == nil {
+	r := room.GetRoom(roomID)
+	if r == nil {
 		//Room Not Found
 		fmt.Println("Lobby Connection Error: Room Not Found")
 		return //errors.New("room not found") //Call deferred close
@@ -65,17 +59,13 @@ func LobbyConnection(c *websocket.Conn) {
 		fmt.Println("Lobby Connection Error: User Not Found: " + username)
 		return //errors.New("user not found")
 	}
-	//TODO: BUG!!!
-	fmt.Println("Creating Lobby Client for " + user.Username)
-	client := room.NewLobbySession(c, user)
-	defer client.Close()
 
-	// Register Client to the Lobby Hub -- Moved into ClientConn logic above (NewClient)
-	//hub.Register <- client
+	fmt.Println("Creating Lobby Client for " + user.Username)
+	// Create and Register Client to the Lobby Hub
+	client := r.NewClient(c, user)
 
 	// Write out the initial lobby state on initial connection
-	message, _ := json.Marshal(room.LobbyState())
-	//for conn := range hub.clients {
+	message, _ := json.Marshal(r.LobbyState())
 	if err := c.WriteMessage(websocket.TextMessage, message); err != nil {
 		// Client Connection write error
 		//hub.Remove <- c
@@ -83,19 +73,13 @@ func LobbyConnection(c *websocket.Conn) {
 		//c.Close()
 		return
 	}
-	//}
 
 	// Start reading from client connection
-	go startRead(client, signalClose)
-	// Wait for the read goroutine to be done
-	<-signalClose
-
-	// Connection over
-	// Should fire deferred closes/unregisters
-	//return
+	go startRead(client)
+	// startRead will handle connection close, can exit func gracefully
 }
 
-// func GameConnection(c *websocket.Conn) {
+func GameConnection(c *websocket.Conn) {
 // 	defer func() {
 // 		game.RemoveClientConnection <- c
 // 		c.Close()
@@ -133,4 +117,4 @@ func LobbyConnection(c *websocket.Conn) {
 
 // 	// Connection over
 // 	// Should fire deferred unregister
-// }
+}
