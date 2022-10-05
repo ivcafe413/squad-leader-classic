@@ -1,42 +1,42 @@
 package handlers
 
 import (
-	"encoding/json"
+	//"encoding/json"
 	"fmt"
 
 	"github.com/gofiber/websocket/v2"
 	"github.com/vagrant-technology/squad-leader/auth"
 	"github.com/vagrant-technology/squad-leader/room"
-	"github.com/vagrant-technology/squad-leader/session"
+	//"github.com/vagrant-technology/squad-leader/session"
 )
 
 // ----- Local WS Connection logic for conn read/writes
-func startRead[T session.Stateful](c *session.Client[T]) {
-	defer c.Close()
+// func startRead[T session.Stateful](c *session.Client[T]) {
+// 	defer c.Close()
 
-	// Reading incoming from end client -> websocket
-	for {
-		mType, message, err := c.ReadMessage()
-		if err != nil {
-			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-				//log.Println("read error:", err)
-				fmt.Println("read from client error: " + err.Error())
-			}
+// 	// Reading incoming from end client -> websocket
+// 	for {
+// 		mType, message, err := c.ReadMessage()
+// 		if err != nil {
+// 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
+// 				//log.Println("read error:", err)
+// 				fmt.Println("read from client error: " + err.Error())
+// 			}
 
-			break // Break out of the for loop
-		}
+// 			break // Break out of the for loop
+// 		}
 
-		if mType == websocket.TextMessage {
-			// When we receive client messages, we use the Process strategy
-			if c.Process(string(message)) != nil {
-				fmt.Println("client msg process error: " + err.Error())
-				break // out of for loop
-			}
-		}
-	}
+// 		if mType == websocket.TextMessage {
+// 			// When we receive client messages, we use the Process strategy
+// 			if c.Process(string(message)) != nil {
+// 				fmt.Println("client msg process error: " + err.Error())
+// 				break // out of for loop
+// 			}
+// 		}
+// 	}
 
-	// Done, unblock the main connection thread
-}
+// 	// Done, unblock the main connection thread
+// }
 
 // ----- Lobby Connection: Active messaging to lobby for user ready status
 func LobbyConnection(c *websocket.Conn) {
@@ -44,15 +44,12 @@ func LobbyConnection(c *websocket.Conn) {
 	username := c.Params("user")
 	roomID := c.Params("room")
 
-	//var room *game.Room
-	// Need Lobby Hub early
-	r := room.GetRoom(roomID)
+	r := room.Get(roomID)
 	if r == nil {
 		//Room Not Found
 		fmt.Println("Lobby Connection Error: Room Not Found")
 		return //errors.New("room not found") //Call deferred close
 	}
-	// hub := room.Lobby.Hub
 
 	var user *auth.User
 	if user = auth.GetUserByName(username); user == nil {
@@ -61,22 +58,22 @@ func LobbyConnection(c *websocket.Conn) {
 	}
 
 	fmt.Println("Creating Lobby Client for " + user.Username)
-	// Create and Register Client to the Lobby Hub
+	// Create and Register Client to the room Lobby Hub
 	client := r.NewClient(c, user)
 
-	// Write out the initial lobby state on initial connection
-	message, _ := json.Marshal(r.LobbyState())
-	if err := c.WriteMessage(websocket.TextMessage, message); err != nil {
-		// Client Connection write error
-		//hub.Remove <- c
-		c.WriteMessage(websocket.CloseMessage, []byte{})
-		//c.Close()
-		return
-	}
+	// TODO: Write out the initial lobby state on initial connection
+	// message, _ := json.Marshal(r.LobbyState())
+	// if err := c.WriteMessage(websocket.TextMessage, message); err != nil {
+	// 	// Client Connection write error
+	// 	//hub.Remove <- c
+	// 	c.WriteMessage(websocket.CloseMessage, []byte{})
+	// 	//c.Close()
+	// 	return
+	// }
 
-	// Start reading from client connection
-	go startRead(client)
-	// startRead will handle connection close, can exit func gracefully
+	// Start read/write client connection
+	go client.ConfigureRead()
+	go client.ConfigureWrite()
 }
 
 func GameConnection(c *websocket.Conn) {

@@ -14,6 +14,7 @@ function Lobby() {
     const [lobby, setLobby] = useState({})
     const [userReady, setUserReady] = useState({})
 
+    // Calculate/memoize a read-only value iff all users have readied up
     const allReady = useMemo(() => {
         for (const key of Object.keys(lobby)) {
             if (!lobby[key]) {
@@ -23,18 +24,24 @@ function Lobby() {
         return true;
     });
 
+    // Changes boolean of userReady when lobby state changes
     useEffect(() => {
         setUserReady(lobby[state.username]);
     }, [lobby, state.username]);
 
+    // Upon message recieved, update the lobby with server state
     useEffect(() => {
         if (lastMessage !== null) {
             var payload = JSON.parse(lastMessage.data);
-            //console.log(payload);
+            // TODO: Need to be checking message/payload types
+            // Case 1: Lobby Update
+            // Case 2: Game Start
             setLobby(payload);
         }
     }, [lastMessage]);
 
+    // User clicks to ready/un-ready
+    // TODO: Update the server with this update via WS write
     let handleChangeReadyClick = (ev) => {
         ev.preventDefault();
         let updatedValue = lobby;

@@ -53,7 +53,7 @@ func JoinRoom(c *fiber.Ctx) error {
 
 	//roomID := uuid.MustParse(joiner.Room)
 	var r *room.Room
-	if r = room.GetRoom(joiner.RoomID); r == nil {
+	if r = room.Get(joiner.RoomID); r == nil {
 		//Room Not Found
 		fmt.Println("Join Room Error: Room Not Found")
 		return errors.New("room not found")
@@ -91,7 +91,7 @@ func StartGame(c *fiber.Ctx) error {
 		return err
 	}
 
-	room := room.GetRoom(starter.RoomID)
+	room := room.Get(starter.RoomID)
 	if room == nil {
 		//Room Not Found
 		fmt.Println("Game Start Error: Room Not Found")
@@ -113,7 +113,7 @@ func StartGame(c *fiber.Ctx) error {
 	//First need to make a new Game, as Game is no longer member of Room
 	g := game.New()
 	//Iterate over all users in the room lobby and add them as players in the game
-	for conn, client := range room.GetClients() {
+	for conn, client := range room.Clients() {
 		g.Add(client.GetUser())
 		// Need to pass Game ID back to Clients and allow clients to connect to the game
 		// TODO:
