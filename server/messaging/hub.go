@@ -1,4 +1,4 @@
-package session
+package messaging
 
 import (
 	//"encoding/json"
@@ -8,18 +8,20 @@ import (
 )
 
 // Type Alias for Connection mapping
-type ClientConnections[T StateHandler] map[*websocket.Conn]*Client[T]
+type ClientConnections map[*websocket.Conn]*Client
 
-type ClientHub[T StateHandler] struct {
+type ClientHub struct {
 	//entity    T
-	Clients   ClientConnections[T] //
-	Register  chan *Client[T]
+	Clients   ClientConnections //
+	Register  chan *Client
 	Remove    chan *websocket.Conn
 	Broadcast chan interface{}
+
 	done 	  chan bool
+	input chan []byte
 }
 
-func (hub *ClientHub[T]) Start() {
+func (hub *ClientHub) Start() {
 	// Goroutine
 	for {
 		select {
@@ -51,7 +53,7 @@ func (hub *ClientHub[T]) Start() {
 	}
 }
 
-func (hub *ClientHub[T]) Stop() {
+func (hub *ClientHub) Stop() {
 	<-hub.done // Signal the Hub closed, stops the hub goroutine
 	for _, client := range hub.Clients {
 		client.Close()
@@ -62,13 +64,17 @@ func (hub *ClientHub[T]) Stop() {
 	close(hub.Broadcast)
 }
 
-func NewClientHub[T StateHandler](v T) *ClientHub[T] {
-	hub := new(ClientHub[T])
+func NewClientHub() *ClientHub {
+	hub := new(ClientHub)
 	
-	hub.Clients = make(map[*websocket.Conn]*Client[T])
-	hub.Register = make(chan *Client[T])
+	hub.Clients = make(map[*websocket.Conn]*Client)
+	hub.Register = make(chan *Client)
 	hub.Remove = make(chan *websocket.Conn)
 	hub.Broadcast = make(chan interface{})
+	
+	hub.done = make(chan bool, 1)
+	hub.input = make(chan []byte)
+	
 
 	return hub
 }

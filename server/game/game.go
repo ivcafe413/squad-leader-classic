@@ -5,7 +5,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/vagrant-technology/squad-leader/auth"
 	"github.com/vagrant-technology/squad-leader/game/grid"
-	"github.com/vagrant-technology/squad-leader/session"
+	"github.com/vagrant-technology/squad-leader/messaging"
 )
 
 var games = make(map[uuid.UUID]*Game)
@@ -15,7 +15,7 @@ type Game struct {
 	Players map[*auth.User]bool `json:"players"` //Player Connection Map
 	Grid *grid.HexGrid `json:"grid"`
 
-	hub *session.ClientHub[*Game] `json:"-"`
+	hub *messaging.ClientHub[*Game] `json:"-"`
 }
 
 func (game *Game) ReportState() any {
@@ -30,7 +30,7 @@ func (game *Game) Start() error {
 
 }
 
-func (game *Game) NewClient(c *websocket.Conn, user *auth.User) *session.Client[*Game] {
+func (game *Game) NewClient(c *websocket.Conn, user *auth.User) *messaging.Client[*Game] {
 
 }
 
@@ -43,7 +43,7 @@ func New() *Game {
 	game.Players = make(map[*auth.User]bool)
 	game.Grid = grid.NewHexGrid(33, 10)
 
-	game.hub = session.NewClientHub(game)
+	game.hub = messaging.NewClientHub(game)
 
 	games[game.ID] = game
 	

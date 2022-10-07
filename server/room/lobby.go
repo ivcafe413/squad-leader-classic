@@ -7,7 +7,7 @@ import (
 
 	"github.com/gofiber/websocket/v2"
 	"github.com/vagrant-technology/squad-leader/auth"
-	"github.com/vagrant-technology/squad-leader/session"
+	"github.com/vagrant-technology/squad-leader/messaging"
 )
 
 //type LobbyConnections ClientConnections[*Lobby]
@@ -15,7 +15,7 @@ import (
 type Lobby struct {
 	Users map[*auth.User]bool // Ready Map
 	//Room  *Room
-	hub *session.ClientHub[*Lobby]
+	hub *messaging.ClientHub
 }
 
 // Implement stateful interface
@@ -31,7 +31,7 @@ func (lobby *Lobby) MarshalJSON() ([]byte, error) {
 }
 
 func (lobby *Lobby) Start() {
-	lobby.hub = session.NewClientHub(lobby)
+	lobby.hub = messaging.NewClientHub()
 
 	go lobby.hub.Start()
 }
@@ -48,12 +48,12 @@ func (lobby *Lobby) Start() {
 // 	return lobby
 // }
 
-func (lobby *Lobby) Clients() session.ClientConnections[*Lobby] {
+func (lobby *Lobby) Clients() messaging.ClientConnections {
 	return lobby.hub.Clients
 }
 
-func (lobby *Lobby) NewClient(c *websocket.Conn, user *auth.User) *session.Client[*Lobby] {
-	return session.NewClient(lobby.hub, c, user)
+func (lobby *Lobby) NewClient(c *websocket.Conn, user *auth.User) *messaging.Client {
+	return messaging.NewClient(lobby.hub, c, user)
 }
 
 // func (r *Room) RemoveClient(c *websocket.Conn) {

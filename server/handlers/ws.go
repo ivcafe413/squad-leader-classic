@@ -10,34 +10,6 @@ import (
 	//"github.com/vagrant-technology/squad-leader/session"
 )
 
-// ----- Local WS Connection logic for conn read/writes
-// func startRead[T session.Stateful](c *session.Client[T]) {
-// 	defer c.Close()
-
-// 	// Reading incoming from end client -> websocket
-// 	for {
-// 		mType, message, err := c.ReadMessage()
-// 		if err != nil {
-// 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-// 				//log.Println("read error:", err)
-// 				fmt.Println("read from client error: " + err.Error())
-// 			}
-
-// 			break // Break out of the for loop
-// 		}
-
-// 		if mType == websocket.TextMessage {
-// 			// When we receive client messages, we use the Process strategy
-// 			if c.Process(string(message)) != nil {
-// 				fmt.Println("client msg process error: " + err.Error())
-// 				break // out of for loop
-// 			}
-// 		}
-// 	}
-
-// 	// Done, unblock the main connection thread
-// }
-
 // ----- Lobby Connection: Active messaging to lobby for user ready status
 func LobbyConnection(c *websocket.Conn) {
 	//Requires Room and User IDs to function
@@ -63,13 +35,6 @@ func LobbyConnection(c *websocket.Conn) {
 
 	// TODO: Write out the initial lobby state on initial connection
 	// message, _ := json.Marshal(r.LobbyState())
-	// if err := c.WriteMessage(websocket.TextMessage, message); err != nil {
-	// 	// Client Connection write error
-	// 	//hub.Remove <- c
-	// 	c.WriteMessage(websocket.CloseMessage, []byte{})
-	// 	//c.Close()
-	// 	return
-	// }
 
 	// Start read/write client connection
 	go client.ConfigureRead()
