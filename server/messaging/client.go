@@ -1,7 +1,7 @@
 package messaging
 
 import (
-	"fmt"
+	"log"
 
 	"github.com/gofiber/websocket/v2"
 	"github.com/vagrant-technology/squad-leader/auth"
@@ -18,52 +18,50 @@ type Client struct {
 	connection *websocket.Conn
 	user       *auth.User
 	//reader		messageReader
-	writer		chan []byte
+	writer chan []byte
 	closed bool
 }
 
 // Client implementation of websocket Client interface
 func (client *Client) ConfigureRead() {
-	defer client.Close()
+	//defer client.Close()
 
 	// Reading incoming from websocket -> client (in)
 	for {
 		mType, message, err := client.connection.ReadMessage()
 		if err != nil {
-			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
-				//log.Println("read error:", err)
-				fmt.Println("read from client error: " + err.Error())
-			}
-
-			break // Break out of the for loop
+			log.Println("client read error: " + err.Error())
+			//if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
+			//fmt.Println(fmt.Sprintf("client read error: %v", err))
+			//}
+			break // Break out of the for loop, reach deferred functionality
 		}
 
 		if mType == websocket.TextMessage {
 			// When we receive client messages, we use the Process strategy
 			// Pipe the message into the hub's input channel for processing
-			// if client.reader(message) != nil {
-			// 	fmt.Println("client msg process error: " + err.Error())
-			// 	break // out of for loop
-			// }
+			log.Println("message from client: " + string(message))
 			client.hub.input <- message
 		}
 	}
 }
 
 func (client *Client) ConfigureWrite() {
-	defer client.Close()
+	//defer client.Close()
 
 	// Write messages that end up in client write channel -> websocket (out)
 	for {
-		message, ok := <- client.writer
+		message, ok := <-client.writer
 		if !ok {
 			// Channel closed, end gracefully
+			log.Println("Client write channel closed, closing client...")
 			client.connection.WriteMessage(websocket.CloseMessage, []byte{})
 			return
 		}
 
 		if err := client.connection.WriteMessage(websocket.TextMessage, message); err != nil {
-			// Client Connection write error
+			//Client Connection write error
+			log.Println("client write error: " + err.Error())
 			//hub.Remove <- conn
 			client.connection.WriteMessage(websocket.CloseMessage, []byte{})
 			//conn.Close()
@@ -73,15 +71,17 @@ func (client *Client) ConfigureWrite() {
 }
 
 func (client *Client) Close() {
+	log.Println("Closing client for " + client.GetUser().ID.String() + "...")
 	client.hub.Remove <- client.connection //Needs to be idempotent
 
 	if !client.closed {
 		client.connection.Close()
 		client.closed = true
 	}
+	log.Println("Client closed")
 }
 
-// ----- 
+// -----
 
 func (client *Client) GetUser() *auth.User {
 	return client.user
@@ -96,6 +96,7 @@ func (client *Client) GetUser() *auth.User {
 // }
 
 func NewClient(hub *ClientHub, conn *websocket.Conn, user *auth.User) *Client {
+	log.Println("Creating new WS client for " + user.ID.String() + "...")
 	client := new(Client)
 
 	client.hub = hub
@@ -105,8 +106,6 @@ func NewClient(hub *ClientHub, conn *websocket.Conn, user *auth.User) *Client {
 	client.writer = make(chan []byte) //256?
 	client.closed = false
 
-	// Go ahead and Register the client to the hub, since we have it
-	hub.Register <- client
-
+	log.Println("New messaging client created!")
 	return client
 }

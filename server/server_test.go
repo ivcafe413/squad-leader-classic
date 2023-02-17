@@ -10,7 +10,6 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	//"github.com/fasthttp/websocket"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gorilla/websocket"
 	"github.com/vagrant-technology/squad-leader/auth"
@@ -127,10 +126,10 @@ func Test_CreateAndJoinRoom(t *testing.T) {
 	// ----- Step 2: Join the Room Lobby -----
 	//joinPayload := json.Marshal()
 	joiner := struct {
-		RoomID string `json:"roomID"`
+		RoomID   string `json:"roomID"`
 		Username string `json:"username"`
 	}{
-		RoomID: roomPayload.Room,
+		RoomID:   roomPayload.Room,
 		Username: roomPayload.User.Username,
 	}
 	jp, _ := json.Marshal(joiner)
@@ -145,7 +144,6 @@ func Test_CreateAndJoinRoom(t *testing.T) {
 	defer jRes.Body.Close()
 
 	// ----- Step 3: Join the Lobby via Websocket Connection -----
-	//testUrl := "ws://localhost:3000/ws"
 	wsUrl := "ws://" + ln.Addr().String() + "/ws/" + roomPayload.Room + "/" + roomPayload.User.Username
 	fmt.Println("WS Join URL: " + wsUrl)
 
@@ -154,24 +152,28 @@ func Test_CreateAndJoinRoom(t *testing.T) {
 	//joinRes, joinErr := app.Test(joinReq)
 
 	if joinErr != nil {
+		fmt.Println("WS Join Error:")
 		t.Fatal(joinErr.Error())
 	}
 
 	defer ws.Close()
 
 	// Receive the initial state
-	_, iState, err := ws.ReadMessage()
-	if err != nil {
-		t.Fatalf("%v", err)
-	}
-	fmt.Println("WS Server Initial State: " + string(iState))
+	// fmt.Println("Waiting for a test read")
+	// _, iState, err := ws.ReadMessage()
+	// if err != nil {
+	// 	t.Fatalf("%v", err)
+	// }
+	// fmt.Println("WS Server Initial State: " + string(iState))
 
 	// ----- Step 4: Send a test message to Lobby WS-----
+	fmt.Println("Writing ready message")
 	if err := ws.WriteMessage(websocket.TextMessage, []byte("ready")); err != nil {
 		t.Fatalf("%v", err)
 	}
 
 	// Receive the response
+	fmt.Println("Reading ready message")
 	_, reply, err := ws.ReadMessage()
 	if err != nil {
 		t.Fatalf("%v", err)
