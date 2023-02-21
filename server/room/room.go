@@ -28,6 +28,11 @@ type Room struct {
 	IsClosed bool `json:"isClosed"`
 }
 
+type UserReady struct {
+	User  *auth.User `json:"user"`
+	Ready bool       `json:"ready"`
+}
+
 func (r *Room) Join(user *auth.User) error {
 	// If the User is not already in the Lobby
 	if _, exists := r.Users[user]; exists {
@@ -38,13 +43,32 @@ func (r *Room) Join(user *auth.User) error {
 	//readyMsg, _ := r.ClientInput(user, []byte("not ready"))
 
 	//Broadcast state change to clients
-	//r.hub.Broadcast <- readyMsg
+	//msg, _ := r.MarshalJSON()
+	//r.hub.Broadcast <- msg
+
 	return nil
 }
 
 func (r *Room) NewClient(c *websocket.Conn, user *auth.User) *messaging.Client {
-	nc := messaging.NewClient(r.hub, c, user)
+	reader := func(msg []byte) interface{} {
+		stringMsg := string(msg)
+		//log.Println("checking incoming client message: ", stringMsg)
+		readyState := stringMsg == "ready"
+		//log.Println("checking translated ready state: ", readyState)
+		rawMsg := UserReady{
+			User:  user,
+			Ready: readyState,
+		}
+
+		return rawMsg
+	}
+
+	nc := messaging.NewClient(r.hub, c, user, reader)
 	r.hub.Register <- nc
+
+	//Broadcast state change to clients
+	msg, _ := r.MarshalJSON()
+	r.hub.Broadcast <- msg
 
 	return nc
 }
@@ -56,17 +80,18 @@ func (r *Room) Close() error {
 	return nil
 }
 
-func (r *Room) ClientInput(user *auth.User, msg []byte) ([]byte, error) {
-	//Make change to room Lobby State/Ready State
-	// Expecting raw string in this case // TODO: Implemented different generic expected types
-	if string(msg) == "ready" {
-		r.Users[user] = true
-	} else {
-		r.Users[user] = false
-	}
+// func (r *Room) ClientInput(user *auth.User, msg []byte) ([]byte, error) {
+// 	//Make change to room Lobby State/Ready State
+// 	//Expecting raw string in this case
 
-	return r.MarshalJSON()
-}
+// 	if string(msg) == "ready" {
+// 		r.Users[user] = true
+// 	} else {
+// 		r.Users[user] = false
+// 	}
+
+// 	return r.MarshalJSON()
+// }
 
 func (r *Room) MarshalJSON() ([]byte, error) {
 	//Return the user lobby into Marshalable for broadcast
@@ -89,18 +114,34 @@ func NewRoom(user *auth.User) string {
 	room.ID = roomID
 	room.Owner = user
 	room.IsClosed = false
-
 	room.Users = make(map[*auth.User]bool)
-	//room.Users[user] = false
-
 	rooms[roomID] = room
-	room.hub = messaging.NewClientHub()
+
+	//Start the Message Hub w/Input Processor
+	processor := func(msg interface{}) []byte {
+		// rawMsg := struct {
+		// 	User  *auth.User `json:"user"`
+		// 	Ready bool       `json:"ready"`
+		// }{}
+		//json.Unmarshal(msg, &rawMsg)
+		switch x := msg.(type) {
+		case UserReady:
+			//log.Println("raw message to process: ", x)
+			//user := room.Users[x.User]
+			//log.Println("checking current user state: ", user)
+			//log.Println("checking input to change: ", x.Ready)
+			room.Users[x.User] = x.Ready
+
+			readyMsg, _ := room.MarshalJSON()
+			//log.Println("marshalled room state: ", string(readyMsg))
+			return readyMsg
+
+		default:
+			return nil
+		}
+	}
+	room.hub = messaging.NewClientHub(processor)
 	go room.hub.Start()
-
-	//readyMsg, _ := room.ClientInput(user, []byte("not ready"))
-
-	//Broadcast state change to clients
-	//room.hub.Broadcast <- readyMsg
 
 	log.Println("Room " + room.ID.String() + " created")
 	return room.ID.String()

@@ -35,16 +35,16 @@ func (g *Game) Add(u *auth.User) {
 
 // -----
 
-func New() *Game {
-	game := new(Game)
+// func New() *Game {
+// 	game := new(Game)
 
-	game.ID = uuid.New()
-	game.Players = make(map[*auth.User]bool)
-	game.Grid = grid.NewHexGrid(33, 10)
+// 	game.ID = uuid.New()
+// 	game.Players = make(map[*auth.User]bool)
+// 	game.Grid = grid.NewHexGrid(33, 10)
 
-	game.hub = messaging.NewClientHub()
+// 	game.hub = messaging.NewClientHub()
 
-	games[game.ID] = game
+// 	games[game.ID] = game
 
-	return game
-}
+// 	return game
+// }

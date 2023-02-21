@@ -7,7 +7,7 @@ import (
 	"github.com/vagrant-technology/squad-leader/auth"
 )
 
-//type messageReader func([]byte) error
+type messageReader func([]byte) interface{}
 
 // type Stateful interface {
 // 	ReportState() any
@@ -17,9 +17,9 @@ type Client struct {
 	hub        *ClientHub
 	connection *websocket.Conn
 	user       *auth.User
-	//reader		messageReader
-	writer chan []byte
-	closed bool
+	reader     messageReader
+	writer     chan []byte
+	closed     bool
 }
 
 // Client implementation of websocket Client interface
@@ -30,7 +30,7 @@ func (client *Client) ConfigureRead() {
 	for {
 		mType, message, err := client.connection.ReadMessage()
 		if err != nil {
-			log.Println("client read error: " + err.Error())
+			log.Println("WS Client read error: " + err.Error())
 			//if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
 			//fmt.Println(fmt.Sprintf("client read error: %v", err))
 			//}
@@ -40,15 +40,15 @@ func (client *Client) ConfigureRead() {
 		if mType == websocket.TextMessage {
 			// When we receive client messages, we use the Process strategy
 			// Pipe the message into the hub's input channel for processing
-			log.Println("message from client: " + string(message))
-			client.hub.input <- message
+			log.Println("WS message received from Client: " + string(message))
+			//client.hub.input <- client.reader(message)
+			clientInput := client.reader(message)
+			client.hub.Broadcast <- client.hub.process(clientInput)
 		}
 	}
 }
 
 func (client *Client) ConfigureWrite() {
-	//defer client.Close()
-
 	// Write messages that end up in client write channel -> websocket (out)
 	for {
 		message, ok := <-client.writer
@@ -95,14 +95,14 @@ func (client *Client) GetUser() *auth.User {
 // 	return client.connection.ReadMessage()
 // }
 
-func NewClient(hub *ClientHub, conn *websocket.Conn, user *auth.User) *Client {
+func NewClient(hub *ClientHub, conn *websocket.Conn, user *auth.User, reader messageReader) *Client {
 	log.Println("Creating new WS client for " + user.ID.String() + "...")
 	client := new(Client)
 
 	client.hub = hub
 	client.connection = conn
 	client.user = user
-	//client.reader = T.UserInput(user, user, )
+	client.reader = reader
 	client.writer = make(chan []byte) //256?
 	client.closed = false
 

@@ -26,3 +26,5 @@
 */yarn-error.log*
 
 # ----- Server Section -----
+server/*.exe
+server/*.log

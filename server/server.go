@@ -21,9 +21,7 @@ func ConfigureWS(app *fiber.App) {
 		return fiber.ErrUpgradeRequired
 	})
 
-	//app.Get("/ws/:room/:user", websocket.New(handlers.LobbyConnection))
-	app.Get("/ws/join/:room/:user", websocket.New(handlers.LobbyConnection))
-	//app.Get("/ws/game/:session", websocket.New(handlers.GameConnection))
+	app.Get("/ws/JoinRoom/:room/:user", websocket.New(handlers.LobbyConnection))
 }
 
 func ConfigureApi(app *fiber.App) {

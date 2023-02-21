@@ -1,20 +1,26 @@
 import React, {
-    useState
+    useState,
 } from "react";
-import useWebsocket, { ReadyState } from "react-use-websocket";
 
-// import Container from 'react-bootstrap/Container';
-// import Row from 'react-bootstrap/Row';
-// import Col from 'react-bootstrap/Col';
-
-//import UsersContext from "./UsersContext";
+import Lobby from "./Lobby";
 
 export default function User({username}) {
-    return(
-        <div>
-            <h3>{username}</h3>
+    const [ userJoined, setUserJoined ] = useState(false);
 
-            {/* <Lobby/> */}
+    let joinRoom = () => {
+        console.log(username + " is joining the lobby")
+        setUserJoined(true);
+    };
+
+    return(
+        <div className="square border">
+            <h3>{username}</h3>
+            {userJoined ?
+                <Lobby username={username}/> :
+                <button type="button" onClick={joinRoom}>
+                    Join Lobby
+                </button>
+            }
         </div>
     );
 };

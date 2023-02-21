@@ -1,8 +1,6 @@
 package handlers
 
 import (
-	"errors"
-	"fmt"
 	"log"
 
 	"github.com/gofiber/fiber/v2"
@@ -31,46 +29,46 @@ func CreateRoom(c *fiber.Ctx) error {
 	return c.JSON(&fiber.Map{
 		"success": true,
 		"roomID":  roomID,
-		"user":    user,
+		"owner":   user.Username,
 	})
 }
 
 // ----- Join Room - Websocket connection to open room connection
-func JoinRoom(c *fiber.Ctx) error {
-	//Requires Room and User IDs to function
-	// userID, _ := strconv.Atoi(c.Params("user"))
-	joiner := struct {
-		RoomID   string `json:"roomID"`
-		Username string `json:"username"`
-	}{}
+// func JoinRoom(c *fiber.Ctx) error {
+// 	//Requires Room and User IDs to function
+// 	// userID, _ := strconv.Atoi(c.Params("user"))
+// 	joiner := struct {
+// 		RoomID   string `json:"roomID"`
+// 		Username string `json:"username"`
+// 	}{}
 
-	//client := new(game.Client)
-	if err := c.BodyParser(&joiner); err != nil {
-		fmt.Println("Join Room Error: " + err.Error())
-		return err
-	}
+// 	//client := new(game.Client)
+// 	if err := c.BodyParser(&joiner); err != nil {
+// 		fmt.Println("Join Room Error: " + err.Error())
+// 		return err
+// 	}
 
-	//roomID := uuid.MustParse(joiner.Room)
-	var r *room.Room
-	if r = room.Get(joiner.RoomID); r == nil {
-		//Room Not Found
-		fmt.Println("Join Room Error: Room Not Found")
-		return errors.New("room not found")
-	}
+// 	//roomID := uuid.MustParse(joiner.Room)
+// 	var r *room.Room
+// 	if r = room.Get(joiner.RoomID); r == nil {
+// 		//Room Not Found
+// 		fmt.Println("Join Room Error: Room Not Found")
+// 		return errors.New("room not found")
+// 	}
 
-	var user *auth.User
-	if user = auth.GetUserByName(joiner.Username); user == nil {
-		fmt.Println("Join Room Error: User Not Found")
-		return errors.New("user not found")
-	}
+// 	var user *auth.User
+// 	if user = auth.GetUserByName(joiner.Username); user == nil {
+// 		fmt.Println("Join Room Error: User Not Found")
+// 		return errors.New("user not found")
+// 	}
 
-	if err := r.Join(user); err != nil {
-		fmt.Println("Join Room Error: " + err.Error())
-		return err
-	}
+// 	if err := r.Join(user); err != nil {
+// 		fmt.Println("Join Room Error: " + err.Error())
+// 		return err
+// 	}
 
-	return nil
-}
+// 	return nil
+// }
 
 // ----- Start Game: Initiates a new Game session based on a ready Lobby.
 // Only the owner of a Room can start a game, and only if all Players in the Lobby are Ready.

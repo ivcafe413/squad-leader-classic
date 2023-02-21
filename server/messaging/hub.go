@@ -10,16 +10,17 @@ import (
 
 // Type Alias for Connection mapping
 type ClientConnections map[*websocket.Conn]*Client
-
+type messageProcessor func(interface{}) []byte
 type ClientHub struct {
 	//entity    T
 	Clients   ClientConnections //
 	Register  chan *Client
 	Remove    chan *websocket.Conn
-	Broadcast chan interface{}
+	Broadcast chan []byte
 
-	done  chan bool
-	input chan []byte
+	done    chan bool
+	input   chan interface{}
+	process messageProcessor
 }
 
 func (hub *ClientHub) Start() {
@@ -42,8 +43,10 @@ func (hub *ClientHub) Start() {
 			}
 
 		case message := <-hub.Broadcast:
+			log.Println("Broadcast message received: ", string(message))
 			for conn := range hub.Clients {
-				if err := conn.WriteJSON(message); err != nil {
+				//if err := conn.WriteJSON(message); err != nil {
+				if err := conn.WriteMessage(websocket.TextMessage, message); err != nil {
 					// Client Connection write error
 					log.Println("Messaging hub write error - " + err.Error())
 					//fmt.Println(fmt.Sprintf("hub broadcast error: %v", err))
@@ -51,8 +54,18 @@ func (hub *ClientHub) Start() {
 					hub.Remove <- conn
 					conn.WriteMessage(websocket.CloseMessage, []byte{})
 					conn.Close()
+				} else {
+					log.Println("Broadcasted message successfully")
 				}
 			}
+
+		//TODO: Might need to break out and separate hub input & hub broadcasting (to put hub broadcasting on an FPS)
+		// case input := <-hub.input:
+		// 	//log.Println("Client input received: ", input)
+		// 	msg := hub.process(input)
+		// 	//log.Println("Client input processed: ", string(msg))
+		// 	hub.Broadcast <- msg
+		// 	//log.Println("Post-input processing broadcast")
 
 		case <-hub.done:
 			return // Exit/kill goroutine when hub is done running
@@ -77,17 +90,20 @@ func (hub *ClientHub) Stop() {
 
 // ----- ----- Static functions ----- -----
 
-func NewClientHub() *ClientHub {
+func NewClientHub(processor messageProcessor) *ClientHub {
 	log.Println("Creating new messaging hub for ws...")
 	hub := new(ClientHub)
 
 	hub.Clients = make(map[*websocket.Conn]*Client)
 	hub.Register = make(chan *Client)
 	hub.Remove = make(chan *websocket.Conn)
-	hub.Broadcast = make(chan interface{})
+	hub.Broadcast = make(chan []byte)
 
 	hub.done = make(chan bool, 1)
-	hub.input = make(chan []byte)
+	hub.input = make(chan interface{})
+
+	//Processor
+	hub.process = processor
 
 	log.Println("New messaging hub created")
 	return hub

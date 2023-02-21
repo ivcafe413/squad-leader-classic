@@ -22,13 +22,14 @@ func LobbyConnection(c *websocket.Conn) {
 	if r == nil {
 		//Room Not Found
 		log.Println("Lobby Connection Error: Room Not Found")
-		return //errors.New("room not found") //Call deferred close
+		return
 	}
 
 	var user *auth.User
 	if user = auth.GetUserByName(username); user == nil {
-		log.Println("Lobby Connection Error: User Not Found: " + username)
-		return //errors.New("user not found")
+		log.Println("User Not Found: " + username)
+		log.Println("Creating User...")
+		user = auth.NewUser(username)
 	}
 
 	if err := r.Join(user); err != nil {

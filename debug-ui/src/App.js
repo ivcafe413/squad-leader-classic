@@ -6,21 +6,21 @@ import React, {
 } from "react";
 
 import Room from './Room';
-//import UsersContext from './UsersContext';
 
 export const RoomContext = createContext();
 
-//const usersContext = createContext();
 const users = {
   user1: "TestUser1",
   user2: "TestUser2"
 };
+const wsPrefix = "ws://127.0.0.1:3001/ws/";
 
 export default function App() {
   const [room, setRoom] = useState();
 
   let createRoom = async() => {
     try {
+      console.log("Creating a new room...")
       let response = await fetch("/api/CreateRoom", {
         method: "POST",
         body: JSON.stringify({
@@ -32,13 +32,13 @@ export default function App() {
       let responseJSON = await response.json();
 
       if(response.status === 200) {
+        console.log("Room created successfully!")
         setRoom(responseJSON);
       } else {
-        alert("Server cannot create room");
+        console.log("Server cannot create room");
       }
     } catch (err) {
       console.log(err);
-      alert("Error in Create Room");
     }
   };
   
@@ -47,7 +47,11 @@ export default function App() {
       <h1>SL Debug - version {process.env.REACT_APP_VERSION}</h1>
       <button type="button" onClick={createRoom}>Create New Room</button>
 
-      <RoomContext.Provider value={{ room, users }}>
+      <RoomContext.Provider value={{
+        room,
+        users,
+        wsPrefix
+      }}>
         {room ? <Room /> : <></>}
       </RoomContext.Provider>
     </div>
