@@ -9,10 +9,6 @@ import (
 
 type messageReader func([]byte) interface{}
 
-// type Stateful interface {
-// 	ReportState() any
-// }
-
 type Client struct {
 	hub        *ClientHub
 	connection *websocket.Conn
@@ -41,7 +37,6 @@ func (client *Client) ConfigureRead() {
 			// When we receive client messages, we use the Process strategy
 			// Pipe the message into the hub's input channel for processing
 			log.Println("WS message received from Client: " + string(message))
-			//client.hub.input <- client.reader(message)
 			clientInput := client.reader(message)
 			client.hub.Broadcast <- client.hub.process(clientInput)
 		}
@@ -62,9 +57,7 @@ func (client *Client) ConfigureWrite() {
 		if err := client.connection.WriteMessage(websocket.TextMessage, message); err != nil {
 			//Client Connection write error
 			log.Println("client write error: " + err.Error())
-			//hub.Remove <- conn
 			client.connection.WriteMessage(websocket.CloseMessage, []byte{})
-			//conn.Close()
 			return
 		}
 	}

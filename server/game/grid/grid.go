@@ -32,10 +32,11 @@ func (hm HexMap) MarshalJSON() ([]byte, error) {
 
 type HexGrid struct {
 	//layers	[]GridLayer
-	HexMap	`json:"map"`
-	generationStrat MapGenerationStrategy[coordinates.HexCoordinates]	`json:"-"`
+	HexMap          `json:"map"`
+	generationStrat MapGenerationStrategy[coordinates.HexCoordinates] `json:"-"`
 }
 
+// ----- HexGrid implementation of GameGrid interface -----
 // Getter/Setter for embedded Map
 func (hexGrid *HexGrid) Get(hc coordinates.HexCoordinates) (*spaces.GridSpace, bool) {
 	result, exists := hexGrid.HexMap[hc]

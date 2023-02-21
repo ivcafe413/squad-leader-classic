@@ -1,6 +1,8 @@
 package game
 
 import (
+	"log"
+
 	"github.com/google/uuid"
 	"github.com/vagrant-technology/squad-leader/auth"
 	"github.com/vagrant-technology/squad-leader/game/grid"
@@ -10,9 +12,9 @@ import (
 var games = make(map[uuid.UUID]*Game)
 
 type Game struct {
-	ID      uuid.UUID           `json:"id"`
-	Players map[*auth.User]bool `json:"players"` //Player Connection Map
-	Grid    *grid.HexGrid       `json:"grid"`
+	ID      uuid.UUID     `json:"id"`
+	Players []*auth.User  `json:"players"` //Player Connection Map
+	Grid    *grid.HexGrid `json:"grid"`
 
 	hub *messaging.ClientHub `json:"-"`
 }
@@ -21,9 +23,9 @@ func (game *Game) ReportState() any {
 	return game.Grid
 }
 
-func (g *Game) Add(u *auth.User) {
-	g.Players[u] = false
-}
+// func (g *Game) Add(u *auth.User) {
+// 	g.Players[u] = false
+// }
 
 // func (game *Game) Start() error {
 
@@ -35,16 +37,21 @@ func (g *Game) Add(u *auth.User) {
 
 // -----
 
-// func New() *Game {
-// 	game := new(Game)
+func New(users []*auth.User) string {
+	log.Println("Creating a new game instance...")
 
-// 	game.ID = uuid.New()
-// 	game.Players = make(map[*auth.User]bool)
-// 	game.Grid = grid.NewHexGrid(33, 10)
+	game := new(Game)
+	game.ID = uuid.New()
+	game.Players = users
+	game.Grid = grid.NewHexGrid(33, 10)
 
-// 	game.hub = messaging.NewClientHub()
+	//Client-message input processor
+	processor := new(GameMessageProcessor)
+	game.hub = messaging.NewClientHub(processor.ProcessInput)
+	go game.hub.Start()
 
-// 	games[game.ID] = game
+	games[game.ID] = game
 
-// 	return game
-// }
+	log.Println("Game " + game.ID.String() + "has been initialized!")
+	return game.ID.String()
+}

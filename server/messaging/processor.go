@@ -1,5 +1,5 @@
 package messaging
 
 type MessageProcessor interface {
-	ProcessInput([]byte)
+	ProcessInput(interface{}) []byte
 }

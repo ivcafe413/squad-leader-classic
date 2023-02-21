@@ -10,7 +10,9 @@ import (
 
 // Type Alias for Connection mapping
 type ClientConnections map[*websocket.Conn]*Client
+
 type messageProcessor func(interface{}) []byte
+
 type ClientHub struct {
 	//entity    T
 	Clients   ClientConnections //

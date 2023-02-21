@@ -15,11 +15,6 @@ import (
 
 var rooms = make(map[uuid.UUID]*Room)
 
-// type GameRoom interface {
-// 	Join(*auth.User)
-// 	Close()
-// }
-
 type Room struct {
 	ID       uuid.UUID           `json:"id"`
 	Owner    *auth.User          `json:"owner"`
