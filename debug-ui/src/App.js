@@ -8,6 +8,7 @@ import React, {
 import Room from './Room';
 
 export const RoomContext = createContext();
+export const GameContext = createContext();
 
 const users = {
   user1: "TestUser1",
