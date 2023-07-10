@@ -1,6 +1,7 @@
 package game
 
 import (
+	"errors"
 	"log"
 
 	"github.com/google/uuid"
@@ -13,14 +14,20 @@ var games = make(map[uuid.UUID]*Game)
 
 type Game struct {
 	ID      uuid.UUID     `json:"id"`
-	Players []*auth.User  `json:"players"` //Player Connection Map
+	Players map[*auth.User]bool  `json:"players"` //Player Connection Map
 	Grid    *grid.HexGrid `json:"grid"`
 
 	hub *messaging.ClientHub `json:"-"`
 }
 
-func (game *Game) ReportState() any {
-	return game.Grid
+// func (game *Game) ReportState() any {
+// 	return game.Grid
+// }
+
+func (g *Game) Join(u *auth.User) error {
+	if _, exists := g.Players[u]; !exists {
+		return errors.New("player not part of game")
+	}
 }
 
 // func (g *Game) Add(u *auth.User) {
@@ -35,15 +42,19 @@ func (game *Game) ReportState() any {
 
 // }
 
-// -----
+// ----- ----- Static Methods ----- -----
 
 func New(users []*auth.User) string {
 	log.Println("Creating a new game instance...")
 
 	game := new(Game)
 	game.ID = uuid.New()
-	game.Players = users
+	game.Players = make(map[*auth.User]bool)
 	game.Grid = grid.NewHexGrid(33, 10)
+
+	for _, u := range users {
+		game.Players[u] = false
+	}
 
 	//Client-message input processor
 	processor := new(GameMessageProcessor)
@@ -54,4 +65,9 @@ func New(users []*auth.User) string {
 
 	log.Println("Game " + game.ID.String() + "has been initialized!")
 	return game.ID.String()
+}
+
+func Get(game string) *Game {
+	gameID := uuid.MustParse(game)
+	return games[gameID]
 }

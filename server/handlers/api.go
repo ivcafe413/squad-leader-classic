@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"errors"
-	"fmt"
 	"log"
 
 	"github.com/gofiber/fiber/v2"
@@ -42,44 +41,51 @@ func CreateRoom(c *fiber.Ctx) error {
 // The existing websocket connections are re-used, with Lobby hooks closed and
 // Game channels/goroutines initiated to use the websocket for game state transmission
 func CreateGame(c *fiber.Ctx) error {
-	//TODO: Convert these repeate anon struct declarations into a DTO
+	//TODO: Convert these repeat anon struct declarations into a DTO
 	starter := struct {
 		RoomID   string `json:"roomID"`
 		Username string `json:"username"`
 	}{}
 
 	if err := c.BodyParser(&starter); err != nil {
-		fmt.Println("Game Start Error: " + err.Error())
-		//TODO: Error/logging pattern
+		//fmt.Println("Game Start Error: " + err.Error())
+		log.Println("CreateGame Error: ", err.Error())
 		return err
 	}
 
 	room := room.Get(starter.RoomID)
 	if room == nil {
 		//Room Not Found
-		fmt.Println("Game Start Error: Room Not Found")
-		return errors.New("room not found")
+		// fmt.Println("Game Start Error: Room Not Found")
+		err := errors.New("room not found")
+		log.Println("CreateGame Error: ", err.Error())
+		return err
 	}
 
 	user := auth.GetUserByName(starter.Username)
 	if user == nil {
-		fmt.Println("Game Start Error: User Not Found")
-		return errors.New("user not found")
+		err := errors.New("user not found")
+		//fmt.Println("Game Start Error: User Not Found")
+		log.Println("CreateGame Error: ", err.Error())
+		return err
 	}
 
 	if user != room.Owner {
-		fmt.Println("Game Start Error: Only the Room Owner can start the Game")
-		return errors.New("not authorized to start game")
+		err := errors.New("not authorized to start game")
+		//fmt.Println("Game Start Error: Only the Room Owner can start the Game")
+		log.Println("CreateGame Error: ", err.Error())
+		return err
 	}
 
 	//Passing all checks, start the game
+	//Unpack the Users dictionary into a slice of Users
 	players := make([]*auth.User, 0, len(room.Users))
 	for p := range room.Users {
 		players = append(players, p)
 	}
+
 	gameID := game.New(players)
 
-	// Gives path for authenticated route to Game connection (auth and session ID)
 	room.Close()
 
 	log.Println("Game " + gameID + " successfully created")

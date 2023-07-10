@@ -1,8 +1,6 @@
 package handlers
 
 import (
-	//"encoding/json"
-
 	"log"
 
 	"github.com/gofiber/websocket/v2"
@@ -34,7 +32,7 @@ func LobbyConnection(c *websocket.Conn) {
 
 	if err := r.Join(user); err != nil {
 		log.Println("Join Room Error: " + err.Error())
-		return //err
+		return
 	}
 
 	log.Println("Creating Lobby Client for " + user.Username)
@@ -46,20 +44,13 @@ func LobbyConnection(c *websocket.Conn) {
 	// Start read/write client connection
 	go client.ConfigureWrite()
 	client.ConfigureRead()
-
-	// TODO: Write out the initial lobby state on initial connection
-	// message, _ := json.Marshal(r.LobbyState())
 }
 
 func GameConnection(c *websocket.Conn) {
-	// 	defer func() {
-	// 		game.RemoveClientConnection <- c
-	// 		c.Close()
-	// 	}()
+	username := c.Params("user")
+	gameID := c.Params("game")
 
-	// 	//Requires Room and User IDs to function
-	// 	roomID := uuid.MustParse(c.Params("room"))
-	// 	userID, _ := strconv.Atoi(c.Params("user"))
+	log.Println(username, " attempting to join Game ", gameID)
 
 	// 	client := new(game.Client)
 	// 	if room, exists := game.Rooms[roomID]; !exists {

@@ -35,11 +35,6 @@ func (r *Room) Join(user *auth.User) error {
 	}
 
 	r.Users[user] = false
-	//readyMsg, _ := r.ClientInput(user, []byte("not ready"))
-
-	//Broadcast state change to clients
-	//msg, _ := r.MarshalJSON()
-	//r.hub.Broadcast <- msg
 
 	return nil
 }
@@ -75,22 +70,8 @@ func (r *Room) Close() error {
 	return nil
 }
 
-// func (r *Room) ClientInput(user *auth.User, msg []byte) ([]byte, error) {
-// 	//Make change to room Lobby State/Ready State
-// 	//Expecting raw string in this case
-
-// 	if string(msg) == "ready" {
-// 		r.Users[user] = true
-// 	} else {
-// 		r.Users[user] = false
-// 	}
-
-// 	return r.MarshalJSON()
-// }
-
 func (r *Room) MarshalJSON() ([]byte, error) {
 	//Return the user lobby into Marshalable for broadcast
-
 	roomJson := make(map[string]bool)
 	for k, v := range r.Users {
 		roomJson[k.Username] = v
@@ -114,17 +95,8 @@ func NewRoom(user *auth.User) string {
 
 	//Start the Message Hub w/Input Processor
 	processor := func(msg interface{}) []byte {
-		// rawMsg := struct {
-		// 	User  *auth.User `json:"user"`
-		// 	Ready bool       `json:"ready"`
-		// }{}
-		//json.Unmarshal(msg, &rawMsg)
 		switch x := msg.(type) {
 		case UserReady:
-			//log.Println("raw message to process: ", x)
-			//user := room.Users[x.User]
-			//log.Println("checking current user state: ", user)
-			//log.Println("checking input to change: ", x.Ready)
 			room.Users[x.User] = x.Ready
 
 			readyMsg, _ := room.MarshalJSON()
